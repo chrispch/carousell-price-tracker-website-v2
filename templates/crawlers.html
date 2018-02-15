@@ -1,0 +1,215 @@
+{%extends "nav_bar.html"%}
+
+{%block content%}
+
+<!-- Flash messages -->
+{% for message in get_flashed_messages() %}
+	<div class="alert alert-warning" role="alert" style="margin: 10px 10px 0px 10px">
+	  {{message}}
+	</div>
+{% endfor %}
+
+<!-- Tab Nav -->
+<ul class="nav nav-tabs" id="myTab" role="tablist" style="padding-top: 5px; padding-left: 20px;">
+	<li class="nav-item">
+		<a class="nav-link active" data-toggle="tab" href="#add" role="tab" aria-controls="add">Add</a>
+	</li>
+	<li class="nav-item">
+		<a class="nav-link" data-toggle="tab" href="#manage" role="tab" aria-controls="manage">Manage</a>
+	</li>
+</ul>
+
+<!-- Tab Forms -->
+<div class="tab-content">
+	<!-- Add crawler tab -->
+	<div class="tab-pane active" id="add" role="tabpanel">
+		<div class="container">
+			<form action="" method="post" class="border-bottom" style="padding-bottom: 10px; padding-top: 10px;">
+		
+				<!-- Crawler Name -->
+			
+				<div class="form-group">
+					<label for="crawler-name">Name</label>
+					<input type="text" class="form-control" id="crawler-name" placeholder="Name of crawler" name="name" value="{{name}}"required>
+				</div>
+			
+		
+				<div class="form-row">
+						<!-- Category -->
+						<div class="form-group col-md-6"
+						<label for="category">Category</label>
+							<select name="category" class="form-control" id="category" onchange="this.form.submit()">
+								{% for i in categories %}
+									{% if i == current_category %}
+										<option selected>{{i}}</option>			
+									{% else %}
+										<option>{{i}}</option>
+									{% endif %}
+								{% endfor %}
+							</select>
+						</div>
+					
+						<!-- Subcategory -->
+						<div class="form-group col-md-6"
+						<label for="subcategory">Subcategory</label>
+							<select name="subcategory" class="form-control" id="subcategory">
+								{% for i in subcategories %}
+									{% if i == "All" %}
+										<option selected>{{i}}</option>			
+									{% else %}
+										<option>{{i}}</option>
+									{% endif %}
+								{% endfor %}
+							</select>
+						</div>
+				</div>
+
+				<!-- URL Term -->
+				<!-- <div class="form-group">
+					<label for="url">URL</label>
+					<input name="url" type="text" class="form-control" id="url" placeholder="Crawl a specific URL" value="{{current_url}}">
+					<small style="color:#5b5d60">Note: Entering a URL will override any category/subcategory selections</small>
+				</div> -->
+					
+
+				<button class="btn btn-primary" type="submit" formaction='{{ url_for("preview") }}'>Preview</button>
+				<button class="btn btn-primary" type="submit" formaction='{{ url_for("add") }}'>Add Crawler</button>
+			</form>
+		</div>
+
+		<!-- Preview window -->
+		<div class="container">
+		{% include "preview_content.html" %}
+		</div>
+	</div>
+
+
+	<!-- Manage tab -->
+	<div class="tab-pane" id="manage" role="tabpanel">
+		<div class="container" style="padding-top: 10px;">
+
+			<!-- Message if no crawlers -->
+			{% if not active_crawlers and not inactive_crawlers %}
+				<div class="container" style="padding-top: 10px; padding-left: 10px; padding-right: 10px;">
+					<div class="jumbotron">
+						<h1 class="display-4">You have no crawlers</h1>
+						<p class="lead">
+							Add a crawler under the "add" tab to start collecting data
+						</p>
+					</div>
+				</div>
+			{% endif %}
+
+			<!-- Generate active crawlers -->
+			{% for crawler in active_crawlers %}
+			<form action="", method="post" class="border border-dark rounded" style="padding: 20px 20px 10px 20px; margin-bottom: 10px;">
+				<div class="form-row">
+					<!-- Name -->
+					<div class="form-group col-md-6" style="padding-right: 50px;">
+						<label for="crawler-name" class="font-weight-bold">Name</label>
+						<input type="text" class="form-control" id="crawler-name" value="{{crawler['name']}}" name="name">
+					</div>
+					<!-- Category -->
+					<div class="form-group col-md-3">
+						<label for="category" class="font-weight-bold">Category</label>
+						<input type="text" id="category" value="{{crawler['category']}}" name="category" readonly class="form-control-plaintext">
+					</div>
+					<!-- Subcategory -->
+					<div class="form-group col-md-3">
+						<label for="subcategory" class="font-weight-bold">Subcategory</label>
+						<input type="text" id="subcategory" value="{{crawler['subcategory']}}" name="subcategory" readonly class="form-control-plaintext">
+					</div>
+				</div>
+				
+				<div class="form-row">
+					<!-- URL -->
+					<div class="form-group col-md-6">
+						<label for="url" class="font-weight-bold">URL</label>
+						<input name="url" type="text" placeholder="-" id="url" value="{{crawler['url']}}" readonly class="form-control-plaintext">
+					</div>
+					<!-- Status -->
+					<div class="form-group col-md-2">
+						<label for="status" class="font-weight-bold">Status</label>
+						<input name="status" type="text" id="status" value="Running..." readonly class="form-control-plaintext">
+					</div>
+					<!-- Submit Buttons -->
+					<div class="form-group ml-auto mt-auto">
+						<button class="btn btn-primary" type="submit" formaction="{{ url_for('info_crawler') }}">Get Info</button>
+						<button class="btn btn-primary" type="submit" formaction="{{ url_for('rename_crawler') }}" value="{{crawler['name']}}" name="rename">Rename</button>
+						<button class="btn btn-danger" type="submit" formaction="{{ url_for('stop_crawler') }}" value="{{crawler['name']}}" name="stop">Stop</button>
+						<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#{{crawler['name']}}">Delete</button>
+						<!-- Crawler delete modal -->
+						<div class="modal fade" id="{{crawler['name']}}" tabindex="-1" role="dialog" aria-labelledby="delete_modal" aria-hidden="true">
+						  <div class="modal-dialog" role="document">
+						    <div class="modal-content">
+						      <div class="modal-header">
+						        <h5 class="modal-title" id="delete_modal_label">Confirm Delete</h5>
+						        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						          <span aria-hidden="true">&times;</span>
+						        </button>
+						      </div>
+						      <div class="modal-body">
+						        <p>Are you sure you want to delete this data? Data will not be recoverable.</p>
+						        <button class="btn btn-danger" type="submit" formaction="{{ url_for('del_crawler') }}" value="{{crawler['name']}}" name="delete">Delete</button>
+						        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+						      </div>
+						    </div>
+						  </div>
+						</div>
+					</div>
+				</div>
+			</form>
+			{% endfor %}
+
+			<!-- Generate inactive crawlers -->
+			{% for crawler in inactive_crawlers %}
+			<form action="", method="post" class="border border-dark rounded" style="padding: 20px 20px 10px 20px; margin-bottom: 10px;">
+				<div class="form-row">
+					<!-- Name -->
+					<div class="form-group col-md-6" style="padding-right: 10px;">
+						<label for="crawler-name" class="font-weight-bold">Name</label>
+						<input type="text" id="crawler-name" value="{{crawler['name']}}" name="name" class="form-control">
+					</div>
+					<!-- Category -->
+					<div class="form-group col-md-3">
+						<label for="category" class="font-weight-bold">Category</label>
+						<input type="text" id="category" value="{{crawler['category']}}" name="category" readonly class="form-control-plaintext">
+					</div>
+					<!-- Subcategory -->
+					<div class="form-group col-md-3">
+						<label for="subcategory" class="font-weight-bold">Subcategory</label>
+						<input type="text" id="subcategory" value="{{crawler['subcategory']}}" name="subcategory" readonly class="form-control-plaintext">
+					</div>
+				</div>
+				
+				<div class="form-row">
+					<!-- URL -->
+					<div class="form-group col-md-6">
+						<label for="url" class="font-weight-bold">URL</label>
+						<input name="url" type="text" placeholder="-" id="url" value="{{crawler['url']}}" readonly class="form-control-plaintext">
+					</div>
+					<!-- Status -->
+					<div class="form-group col-md-2">
+						<label for="status" class="font-weight-bold">Status</label>
+						<input name="status" type="text" id="status" value="Paused" readonly class="form-control-plaintext">
+					</div>
+					<!-- Submit Buttons -->
+					<div class="form-group ml-auto mt-auto">
+						<button class="btn btn-primary" type="submit" formaction='{{ url_for("info_crawler") }}'>Get Info</button>
+						<button class="btn btn-primary" type="submit" formaction='{{ url_for("rename_crawler") }}' name="{{crawler['name']}}">Rename</button>
+						<button class="btn btn-success" type="submit" formaction='{{ url_for("start_crawler") }}' value="{{crawler['name']}}" name="start">Start</button>
+						<button class="btn btn-danger" type="submit" formaction='{{ url_for("del_crawler") }}' value="{{crawler['name']}}" name="delete">Delete</button>
+					</div>
+				</div>
+			</form>	
+			{% endfor %}
+		</div>
+	</div>
+</div>
+
+
+
+<!-- My JS -->
+
+<!-- <script src="{{ url_for("static", filename="js/crawlers.js") }}"></script> -->
+{%endblock%}

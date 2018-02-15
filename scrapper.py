@@ -109,41 +109,6 @@ def filter_data(data, name_blacklist, desc_blacklist, price_range):
     return filtered_data
 
 
-# generate smart labels based on common words in listing names
-def generate_labels(data):
-    # collect all words in given scope
-    words = []
-    labels = []
-    for d in data:
-        for w in d.name.split(" "):
-            if w != "":
-                words.append(w)
-
-    # find word frequency
-    word_frequency = {}
-    for w1 in words:
-        word_frequency[w1] = 0
-        for w2 in words:
-            if w1 == w2:
-                word_frequency[w1] += 1
-                words.remove(w1)
-
-    max_return = 3  # number of labels to return
-    for i in range(max_return):
-        # returns highest frequency word as label
-        top_word = max(word_frequency, key=lambda p: word_frequency[p])
-        # print(word_frequency[top_word])
-        if word_frequency[top_word] > 1:
-            new_label = top_word.lower()
-            if new_label not in labels:
-                labels.append(new_label)
-            word_frequency.pop(top_word)
-    if labels:
-        return labels
-    else:
-        return None
-
-
 def search_data(data, search_terms, tolerance=1):
     search_results = []
     temp_results = []

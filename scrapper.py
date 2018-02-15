@@ -5,7 +5,23 @@ from datetime import date, timedelta
 
 
 exception_words = ["spoilt", "broken", "1/10", "2/10", "3/10", "4/10"]
-acceptable_price = {"min": 1, "max": 9999}
+acceptable_price = (1, 9999)  # (min, max)
+urls = {}
+urls_to_crawl = ["all"]
+
+
+# get links to all categories and subcategories on carousell
+def get_links():
+    global urls
+    r = requests.get("https://carousell.com/")
+    c = r.content
+    soup = BeautifulSoup(c, "html.parser")
+    nav_bar = soup.find("div", {"id": "navbarCategoryMenuButtonMenu-0"})
+    links = nav_bar.find_all("a")
+    for l in links:
+        h = l.get('href')
+        t = l.get_text()
+        urls[t] = "https://carousell.com/" + h
 
 
 # query and collect listings for a given URL and returns an array with data
@@ -16,28 +32,31 @@ def scrap(url):
         r = requests.get(url)
         c = r.content
         soup = BeautifulSoup(c, "html.parser")
-        names = soup.find_all("h4", {"id": "productCardTitle"})  # name of listing
+        names = soup.find_all(
+            "h4", {"id": "productCardTitle"})  # name of listing
         info = soup.find_all("dl")  # contains price and desc
-        time_ago = soup.find_all("time")
-        hyperlinks = soup.find_all("a", {"id": "productCardThumbnail"})
+        time_ago = soup.find_all("time")  # time of posting
+        hyperlinks = soup.find_all(
+            "a", {"id": "productCardThumbnail"})  # link to listing
 
         # remove duplicate hyperlinks
         for i in range(len(hyperlinks) - 1, -1, -1):
             if i % 2 == 0:
                 hyperlinks.pop(i)
         current_date = date.today()
+
         # process list of listings from page
         for n, i, t, h in zip(names, info, time_ago, hyperlinks):
+            # parse name
             name = n.text
             x = i.find_all("dd")
+            # parse price
             price_text = x[0].text
             price = float("".join(ele for ele in price_text if ele.isdigit()))
+            # parse description
             desc = x[1].text
             # parse hyperlink
-            hsplit = str(h).split(" ")
-            for link in hsplit:
-                if "href=" in link:
-                    href = "https://carousell.com" + link[6:-1]
+            href = h.get("href")
             # parse time ago data
             t_split = t.text.split(" ")
             if t_split[0] == "last":
@@ -45,7 +64,8 @@ def scrap(url):
             if "yesterday" in t_split[0]:
                 d = current_date - timedelta(days=1)
             elif "year" in t_split[1]:
-                d = date(current_date.year - int(t_split[0]), current_date.month, current_date.day)
+                d = date(current_date.year -
+                         int(t_split[0]), current_date.month, current_date.day)
             elif "month" in t_split[1]:
                 if current_date.month <= int(t_split[0]):
                     d = date(current_date.year - 1, 12 -
@@ -58,24 +78,38 @@ def scrap(url):
             else:
                 d = current_date
 
-            # filter listings with exception words
-            valid = True
-            for ex in exception_words:
-                if ex in desc:
-                    valid = False
-            # filter listings with acceptable prices
-            if not acceptable_price["min"] < price < acceptable_price["max"]:
-                valid = False
-            # add listings to array
-            if valid:
-                data.append({"name": name, "price": price, "date": str(d), "link": href})
+            data.append({"name": name, "price": price, "date": str(d), "link": href,
+                         "desc": desc})
+
         return data
 
     except requests.exceptions.RequestException:
         print("Connection failed")
 
 
-# generate additional smart labels based on common words in listing names
+# filter listings data to weed out troll listings
+def filter_data(data, name_blacklist, desc_blacklist, price_range):
+    filtered_data = []
+    for d in data:
+        valid = True  # set data to successfully pass filter at first
+        if name_blacklist:
+            for n in name_blacklist:
+                if n in d["name"]:
+                    valid = False
+        if desc_blacklist:
+            for n in desc_blacklist:
+                if n in d["desc"]:
+                    valid = False
+        if price_range:
+            if not price_range[0] < d["price"] < price_range[1]:
+                valid = False
+        if valid:
+            d.pop("desc")  # remove description information to reduce data size
+            filtered_data.append(d)
+    return filtered_data
+
+
+# generate smart labels based on common words in listing names
 def generate_labels(data):
     # collect all words in given scope
     words = []
@@ -110,11 +144,11 @@ def generate_labels(data):
         return None
 
 
-def filter_results(filter_labels, data, tolerance=1):
+def search_data(data, search_terms, tolerance=1):
     search_results = []
     temp_results = []
-    for f in filter_labels:
-        # if search_results empty, filtered results stored in search_results (effectively the first filter)
+    for f in search_terms:
+        # runs for the first filter
         if not search_results:
             for listing in data:
                 # checks to see if label matches any word in name, to given tolerance, and returns results
@@ -124,7 +158,7 @@ def filter_results(filter_labels, data, tolerance=1):
                         if listing not in search_results:
                             search_results.append(listing)
 
-        # else, filtered results stored in temp_results for comparison
+        # subsequent filtered results stored in temp_results for comparison
         else:
             for listing in data:
                 # checks to see if label matches any word in name, to given tolerance, and returns results
@@ -134,13 +168,15 @@ def filter_results(filter_labels, data, tolerance=1):
                         if listing not in temp_results:
                             temp_results.append(listing)
 
-            # intersects all new search results
-            search_results = list(filter(lambda x: x in search_results, temp_results))
+            # intersects all new search results and saves it in search_results
+            search_results = list(
+                filter(lambda x: x in search_results, temp_results))
             temp_results = []
 
     return search_results
 
-# scrap("https://carousell.com/categories/electronics-7/audio-207/")
+# get_links()
+# print(scrap("https://carousell.com/categories/electronics-7/audio-207/"))
 # generate_labels(data["sennheiser"])
 # print(search_database(["sennheiser", "headphones"], [data["sennheiser"]]))
 

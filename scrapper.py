@@ -6,7 +6,6 @@ from datetime import date, timedelta
 
 exception_words = ["spoilt", "broken", "1/10", "2/10", "3/10", "4/10"]
 acceptable_price = (1, 9999)  # (min, max)
-urls_to_crawl = ["all"]
 
 
 # returns links to all categories and subcategories on carousell

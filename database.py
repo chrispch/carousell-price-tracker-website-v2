@@ -4,7 +4,8 @@
 # from flask_sqlalchemy import SQLAlchemy
 
 from __init__ import db
-from scrapper import scrap
+from scrapper import scrap, filter_data, exception_words, price_range, search_data
+from analytics import price_statistics
 
 # global categories, subcategories
 categories = {"Electronics": "https://carousell.com/categories/electronics-7/",
@@ -39,6 +40,8 @@ class Tracker(db.Model):
     user_email = db.Column(db.String)
     category = db.Column(db.String)
     search = db.Column(db.String)
+    alert_price = db.Column(db.Float)
+    alert_percentage = db.Column(db.Float)
 
     def __init__(self, name, user_email, category, search):
         self.name = name
@@ -72,51 +75,20 @@ def create_user(email, password):
         return True
 
 
-def create_tracker(user, name, category, subcategory, url, status):
-    if url:
-        effective_url = url
-    else:
-        effective_url = categories[category] + subcategories[category][subcategory] + "?sort_by=time_created%2Cdescending"
+def create_tracker(name, user, category, search, alert_price, alert_percentage):
     # create and add tracker
-    new_tracker = Tracker(name, category, subcategory, effective_url, status)
-    if db.session.query(Tracker).filter(Tracker.name == new_tracker.name).count() == 0:
-        print("Tracker added")
-        db.session.add(new_tracker)
-        db.session.commit()
-
-        # create and add relation to user
-        userid = db.session.query(User.user_id).filter(User.email == user).first()
-        trackerid = db.session.query(Tracker.tracker_id).filter(Tracker.name == name).first()
-        new_relation = UsersToTrackers(userid, trackerid)
-        if db.session.query(UsersToTrackers).filter(UsersToTrackers.tracker_id == trackerid).count() == 0:
-            db.session.add(new_relation)
-            db.session.commit()
-        return True
-    else:
-        return False
+    new_tracker = Tracker(name, user, category, search, alert_price, alert_percentage)
+    db.session.add(new_tracker)
+    db.session.commit()
 
 
-def create_data(tracker, name, price, date, link):
-    new_data = Data(name=name, price=price, date=date, link=link)
+def create_data(name, price, date, link, category):
+    new_data = Data(name, price, date, link, category)
     # if listing of same name, price and date not already in database, add data to database
     if db.session.query(Data).filter(Data.name == new_data.name).\
                               filter(Data.date == new_data.date).\
                               filter(Data.price == new_data.price).count() == 0:
         db.session.add(new_data)
-        db.session.commit()
-        dataid = new_data.data_id
-    else:
-        # print(new_data.name, new_data.price, new_data.date)
-        dataid = db.session.query(Data.data_id).filter(Data.name == new_data.name).\
-                                                        filter(Data.date == new_data.date).\
-                                                        filter(Data.price == new_data.price).first()
-        # print(dataid)
-
-    trackerid = db.session.query(Tracker.tracker_id).filter(Tracker.name == tracker).first()
-    # if tracker-data relation does not yet exist, add relation
-    if trackerid not in db.session.query(TrackersToData.tracker_id).filter(TrackersToData.data_id == dataid).all():
-        new_relation = TrackersToData(trackerid, dataid)
-        db.session.add(new_relation)
         db.session.commit()
 
 
@@ -125,30 +97,13 @@ def delete_tracker(tracker_name):
     trackerid = db.session.query(Tracker.tracker_id).filter(Tracker.name == tracker_name).first()
     if trackerid:  # if tracker exists
         tracker = db.session.query(Tracker).get(trackerid)
-        tracker_relation = db.session.query(UsersToTrackers).get(trackerid)
         db.session.delete(tracker)
-        db.session.delete(tracker_relation)
-        db.session.commit()
-
-    # delete associated data and relation object
-    related_data = []
-    for relation_object in db.session.query(TrackersToData).filter(TrackersToData.tracker_id == trackerid).all():
-        related_data.append(relation_object.data_id)
-        db.session.delete(relation_object)
-        db.session.commit()
-    for data in db.session.query(Data).filter(Data.data_id.in_(related_data)).all():
-        db.session.delete(data)
         db.session.commit()
 
 
 def delete_data(data_id):
-    # trackerid = db.session.query(Tracker.tracker_id).filter(Tracker.name == tracker_name).first()
-    # if data_id:  # if tracker exists
-    # dataid = db.session.query(Data.data_id).filter(Data.data_id == data_id).first()
     data = db.session.query(Data).get(data_id)
-    data_relation = db.session.query(TrackersToData).filter(TrackersToData.data_id == data_id).first()
     db.session.delete(data)
-    db.session.delete(data_relation)
     db.session.commit()
 
 
@@ -156,18 +111,31 @@ def delete_all_data():
     for i in db.session.query(Data).all():
         db.session.delete(i)
         db.session.commit()
-    for i in db.session.query(TrackersToData).all():
-        db.session.delete(i)
-        db.session.commit()
 
 
-def scrap_into_database():
+def scrap_into_database(urls):
     print("Scrapping into database")
-    trackers = db.session.query(Tracker).all()
-    for c in trackers:
-        data = scrap(c.url)
+    # saves crawled data in database
+    for category, url in urls.items():
+        data = scrap(url)
+        data = filter_data(data, exception_words, exception_words, price_range)
         for d in data:
-            create_data(c.name, d["name"], d["price"], d["date"], d["link"])
+            create_data(d["name"], d["price"], d["date"], d["link"], category)
+
+
+def price_alert():
+    # get trackers
+    trackers = db.session.query(Tracker).all()
+    for tracker in trackers:
+        data = db.session.query(Data).filter(Data.category == tracker.category).all()
+        results = search_data(data, tracker.search)
+        ave_price = price_statistics(results)["ave_price"]
+        for d in data:
+            if d.price <= tracker.alert_price\
+             or d.price <= ave_price * tracker.alert_percentage:
+                print("Data alert: ", d.link)
+
+# TODO: change database location to refer to new table
 
 
 db.create_all()

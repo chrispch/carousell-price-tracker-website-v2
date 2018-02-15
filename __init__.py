@@ -1,9 +1,9 @@
 from flask import Flask, request, session, redirect, url_for, render_template, flash
+from flask_apscheduler import APScheduler
+from passlib.hash import sha256_crypt
 from analytics import price_statistics, graph
 from database import *
-from passlib.hash import sha256_crypt
 from scrapper import *
-from flask_apscheduler import APScheduler
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:hern3010@localhost/price-tracker'
@@ -11,6 +11,8 @@ app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:hern3010@localhost/
 db = SQLAlchemy(app)
 preview_content = None
 categories = []
+categories_to_crawl = ["Electronics"]
+urls_to_crawl = {}
 
 
 class Config(object):
@@ -18,6 +20,13 @@ class Config(object):
         {
             'id': 'scrap_into_database',
             'func': 'database:scrap_into_database',
+            'args': 'urls_to_crawl',
+            'trigger': 'interval',
+            'seconds': 60
+        },
+        {
+            'id': 'price_alert',
+            'func': 'database:price_alert',
             'trigger': 'interval',
             'seconds': 60
         }
@@ -294,12 +303,17 @@ def del_data():
 
 if __name__ == "__main__":
     app.debug = True
-    # get urls to scrap
+    # get all urls
     urls = get_links()
-    # get keys from urls as category lists
+    global urls_to_crawl
     global categories
     for k in urls:
+        # get keys from urls as category lists
         categories.append(k)
+        # get urls to scrap
+        if k in categories_to_crawl:
+            urls_to_crawl[k] = urls[k]
+
     # schedule scrapper
     app.config.from_object(Config())
     scheduler = APScheduler()

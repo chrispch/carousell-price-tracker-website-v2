@@ -1,6 +1,6 @@
 <!-- This module is now deprecated -->
 {%block content%}
-<!-- Crawler delete modal -->
+<!-- Tracker delete modal -->
 <div class="modal fade" id="delete_modal" tabindex="-1" role="dialog" aria-labelledby="delete_modal" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -12,10 +12,10 @@
       </div>
       <div class="modal-body">
         <p>Are you sure you want to delete this data? Data will not be recoverable.</p>
-        <button class="btn btn-danger" type="submit" formaction="{{ url_for('del_crawler') }}" value="{{crawler['name']}}" name="delete">Delete</button>
+        <button class="btn btn-danger" type="submit" formaction="{{ url_for('del_tracker') }}" value="{{tracker['name']}}" name="delete">Delete</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>
   </div>
 </div>
-{%endblock%}  
+{%endblock%}

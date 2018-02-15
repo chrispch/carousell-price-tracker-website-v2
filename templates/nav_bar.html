@@ -14,7 +14,7 @@
 	<script src="{{ url_for("static", filename="js/lib/popper.min.js") }}"></script>
 	<script src="{{ url_for("static", filename="js/lib/bootstrap.min.js") }}"></script>
 
-	<title>Crawlers</title>
+	<title>Trackers</title>
 </head>
 <body>
 	{% if session.logged_in %}
@@ -32,16 +32,16 @@
 		<!-- Collapse Menu List -->
 		<div class="collapse navbar-collapse" id="navbarSupportedContent">
 			<ul class="navbar-nav mr-auto">
-				<!-- Crawlers Link -->
+				<!-- Trackers Link -->
 				<li class="nav-item">
-					<a class="{{crawlers_nav}}" href="{{ url_for('crawlers') }}">Crawlers <span class="sr-only">(current)</span></a>
+					<a class="{{trackers_nav}}" href="{{ url_for('trackers') }}">Trackers <span class="sr-only">(current)</span></a>
 				</li>
 				<!-- Database Link -->
 				<li class="nav-item">
 					<a class="{{database_nav}}" href="{{ url_for('database') }}">Database</a>
 				</li>
 			</ul>
-			
+
 			<!-- Logout -->
 			<ul class="nav navbar-nav ml-auto">
 				<li class="nav-item">
@@ -66,16 +66,16 @@
 		<!-- Collapse Menu List -->
 		<div class="collapse navbar-collapse" id="navbarSupportedContent">
 			<ul class="navbar-nav mr-auto">
-				<!-- Crawlers Link Disabled -->
+				<!-- Trackers Link Disabled -->
 				<li class="nav-item">
-					<a class="nav-link disabled" data-toggle="tooltip" data-placement="bottom" title="Please login">Crawlers <span class="sr-only">(current)</span></a>
+					<a class="nav-link disabled" data-toggle="tooltip" data-placement="bottom" title="Please login">Trackers <span class="sr-only">(current)</span></a>
 				</li>
 				<!-- Database Link Disabled -->
 				<li class="nav-item">
 					<a class="nav-link disabled" data-toggle="tooltip" data-placement="bottom" title="Please login">Database</a>
 				</li>
 			</ul>
-			
+
 			<ul class="nav navbar-nav ml-auto">
 				<!-- Register -->
 				<li class="nav-item">
@@ -93,11 +93,11 @@
 	{%include "register_modal.html"%}
 
 	{% endif %}
-	
+
 	<!-- Body content goes here -->
 	{%block content%}
 	{%endblock%}
-	
+
 	<!-- Enable bootstrap tooltips -->
 	<script>$(function () {
 	  $('[data-toggle="tooltip"]').tooltip()})

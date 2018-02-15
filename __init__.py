@@ -36,7 +36,7 @@ class Config(object):
 @app.route('/')
 def home():
     return render_template("home.html", database_nav="nav-link",
-                                   crawlers_nav="nav-link")
+                                   trackers_nav="nav-link")
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -83,28 +83,28 @@ def logout():
     return redirect(url_for("home"))
 
 
-@app.route('/crawlers', methods=["GET", "POST"])
-def crawlers():
+@app.route('/trackers', methods=["GET", "POST"])
+def trackers():
     try:
         if session["logged_in"]:
-            # get user's crawlers
-            active_crawlers = []
-            inactive_crawlers = []
+            # get user's trackers
+            active_trackers = []
+            inactive_trackers = []
             user_id = db.session.query(User.user_id).filter(User.email == session["user_email"]).first()
-            crawler_ids = db.session.query(UsersToCrawlers.crawler_id).filter(UsersToCrawlers.user_id == user_id).all()
-            for crawler_id in crawler_ids:
-                crawler = db.session.query(Crawler).filter(Crawler.crawler_id == crawler_id).first()
-                crawler_info = {}
-                crawler_info["name"] = crawler.name
-                crawler_info["category"] = crawler.category
-                crawler_info["subcategory"] = crawler.subcategory
-                crawler_info["url"] = crawler.url
-                crawler_info["active"] = crawler.active
-                # active crawlers
-                if crawler_info["active"]:
-                    active_crawlers.append(crawler_info)
+            tracker_ids = db.session.query(UsersToTrackers.tracker_id).filter(UsersToTrackers.user_id == user_id).all()
+            for tracker_id in tracker_ids:
+                tracker = db.session.query(Tracker).filter(Tracker.tracker_id == tracker_id).first()
+                tracker_info = {}
+                tracker_info["name"] = tracker.name
+                tracker_info["category"] = tracker.category
+                tracker_info["subcategory"] = tracker.subcategory
+                tracker_info["url"] = tracker.url
+                tracker_info["active"] = tracker.active
+                # active trackers
+                if tracker_info["active"]:
+                    active_trackers.append(tracker_info)
                 else:
-                    inactive_crawlers.append(crawler_info)
+                    inactive_trackers.append(tracker_info)
 
             if request.method == "POST":
                 current_category = request.form["category"]
@@ -112,21 +112,21 @@ def crawlers():
                 # current_url = request.form["url"]
                 global preview_content
                 preview_content = None
-                return render_template("crawlers.html", categories=categories,
+                return render_template("trackers.html", categories=categories,
                                        subcategories=subcategories[current_category],
                                        current_category=current_category,
                                        name=current_name, database_nav="nav-link",
-                                       crawlers_nav="nav-link active", active_crawlers=active_crawlers,
-                                       inactive_crawlers=inactive_crawlers, preview_content=preview_content)
+                                       trackers_nav="nav-link active", active_trackers=active_trackers,
+                                       inactive_trackers=inactive_trackers, preview_content=preview_content)
 
             elif request.method == "GET":
-                    # on first loading crawlers.html
+                    # on first loading trackers.html
                     global preview_content
                     preview_content = None
-                    return render_template("crawlers.html", categories=categories, subcategories=subcategories["Electronics"],
+                    return render_template("trackers.html", categories=categories, subcategories=subcategories["Electronics"],
                                            current_category="Electronics", name="", url="", database_nav="nav-link",
-                                           crawlers_nav="nav-link active", active_crawlers=active_crawlers,
-                                           inactive_crawlers=inactive_crawlers, preview_content=preview_content)
+                                           trackers_nav="nav-link active", active_trackers=active_trackers,
+                                           inactive_trackers=inactive_trackers, preview_content=preview_content)
 
 
     except:
@@ -151,13 +151,13 @@ def database():
                     price_stats = price_statistics(data)
                     graph(data)
 
-                    return render_template("database.html", database_nav="nav-link active", crawlers_nav="nav-link",
+                    return render_template("database.html", database_nav="nav-link active", trackers_nav="nav-link",
                                            current_search=current_search, data=data, price_stats=price_stats, categories=categories)
                 else:
-                    return render_template("database.html", database_nav="nav-link active", crawlers_nav="nav-link",
+                    return render_template("database.html", database_nav="nav-link active", trackers_nav="nav-link",
                                            current_search=current_search, data=None, price_stats=None, categories=categories)
             elif request.method == "GET":
-                    return render_template("database.html", database_nav="nav-link active", crawlers_nav="nav-link",
+                    return render_template("database.html", database_nav="nav-link active", trackers_nav="nav-link",
                                            categories=categories)
         else:
                 return redirect(url_for("home"))
@@ -183,34 +183,34 @@ def add():
         current_category = request.form["category"]
         current_subcategory = request.form["subcategory"]
         current_user = session["user_email"]
-        if create_crawler(current_user, current_name, current_category, current_subcategory, current_url, True):
-            flash("Crawler '{}' added successfully!".format(current_name))
+        if create_tracker(current_user, current_name, current_category, current_subcategory, current_url, True):
+            flash("Tracker '{}' added successfully!".format(current_name))
             scrap_into_database()
         else:
-            flash("Crawler name is already in use. Please try again.")
-        return redirect(url_for("crawlers"))
+            flash("Tracker name is already in use. Please try again.")
+        return redirect(url_for("trackers"))
 
 
 @app.route('/preview', methods=["GET", "POST"])
 def preview():
-    # get user's crawlers
-    active_crawlers = []
-    inactive_crawlers = []
+    # get user's trackers
+    active_trackers = []
+    inactive_trackers = []
     user_id = db.session.query(User.user_id).filter(User.email == session["user_email"]).first()
-    crawler_ids = db.session.query(UsersToCrawlers.crawler_id).filter(UsersToCrawlers.user_id == user_id).all()
-    for crawler_id in crawler_ids:
-        crawler = db.session.query(Crawler).filter(Crawler.crawler_id == crawler_id).first()
-        crawler_info = {}
-        crawler_info["name"] = crawler.name
-        crawler_info["category"] = crawler.category
-        crawler_info["subcategory"] = crawler.subcategory
-        crawler_info["url"] = crawler.url
-        crawler_info["active"] = crawler.active
-        # active crawlers
-        if crawler_info["active"]:
-            active_crawlers.append(crawler_info)
+    tracker_ids = db.session.query(UsersToTrackers.tracker_id).filter(UsersToTrackers.user_id == user_id).all()
+    for tracker_id in tracker_ids:
+        tracker = db.session.query(Tracker).filter(Tracker.tracker_id == tracker_id).first()
+        tracker_info = {}
+        tracker_info["name"] = tracker.name
+        tracker_info["category"] = tracker.category
+        tracker_info["subcategory"] = tracker.subcategory
+        tracker_info["url"] = tracker.url
+        tracker_info["active"] = tracker.active
+        # active trackers
+        if tracker_info["active"]:
+            active_trackers.append(tracker_info)
         else:
-            inactive_crawlers.append(crawler_info)
+            inactive_trackers.append(tracker_info)
 
     if request.method == "POST":
         current_category = request.form["category"]
@@ -223,73 +223,73 @@ def preview():
         current_url = categories[current_category] + subcategories[current_category][current_subcategory] + "?sort_by=time_created%2Cdescending"
         global preview_content
         preview_content = scrap(current_url)
-        return render_template("crawlers.html", categories=categories,
+        return render_template("trackers.html", categories=categories,
                                subcategories=subcategories[current_category],
                                current_category=current_category,
                                name=current_name, url=current_url, database_nav="nav-link",
-                               crawlers_nav="nav-link active", active_crawlers=active_crawlers,
-                               inactive_crawlers=inactive_crawlers, preview_content=preview_content,
+                               trackers_nav="nav-link active", active_trackers=active_trackers,
+                               inactive_trackers=inactive_trackers, preview_content=preview_content,
                                current_url=current_url)
 
     elif request.method == "GET":
         return redirect(url_for("home"))
 
 
-@app.route('/del_crawler', methods=["GET", "POST"])
-def del_crawler():
+@app.route('/del_tracker', methods=["GET", "POST"])
+def del_tracker():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
-        delete_crawler(request.form["delete"])
-        flash("Crawler '{}' deleted successfully!".format(request.form["delete"]))
-        return redirect(url_for("crawlers"))
+        delete_tracker(request.form["delete"])
+        flash("Tracker '{}' deleted successfully!".format(request.form["delete"]))
+        return redirect(url_for("trackers"))
 
 
-@app.route('/rename_crawler', methods=["GET", "POST"])
-def rename_crawler():
+@app.route('/rename_tracker', methods=["GET", "POST"])
+def rename_tracker():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
         old_name = request.form["rename"]
         new_name = request.form["name"]
-        if db.session.query(Crawler).filter(Crawler.name == new_name).count() == 0:
-            db.session.query(Crawler).filter(Crawler.name == old_name).first().name = new_name
+        if db.session.query(Tracker).filter(Tracker.name == new_name).count() == 0:
+            db.session.query(Tracker).filter(Tracker.name == old_name).first().name = new_name
             db.session.commit()
-            flash("Crawler renamed successfully")
-            return redirect(url_for("crawlers"))
+            flash("Tracker renamed successfully")
+            return redirect(url_for("trackers"))
         else:
-            flash("Crawler name already in use. Rename failed.")
-            return redirect(url_for("crawlers"))
+            flash("Tracker name already in use. Rename failed.")
+            return redirect(url_for("trackers"))
 
 
-@app.route('/info_crawler', methods=["GET", "POST"])
-def info_crawler():
+@app.route('/info_tracker', methods=["GET", "POST"])
+def info_tracker():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
         return redirect(url_for("database"))
 
 
-@app.route('/start_crawler', methods=["GET", "POST"])
-def start_crawler():
+@app.route('/start_tracker', methods=["GET", "POST"])
+def start_tracker():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
-        db.session.query(Crawler).filter(Crawler.name == request.form["start"]).first().active = True
+        db.session.query(Tracker).filter(Tracker.name == request.form["start"]).first().active = True
         db.session.commit()
-        flash("Crawler '{}' started successfully!".format(request.form["start"]))
-        return redirect(url_for("crawlers"))
+        flash("Tracker '{}' started successfully!".format(request.form["start"]))
+        return redirect(url_for("trackers"))
 
 
-@app.route('/stop_crawler', methods=["GET", "POST"])
-def stop_crawler():
+@app.route('/stop_tracker', methods=["GET", "POST"])
+def stop_tracker():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
-        db.session.query(Crawler).filter(Crawler.name == request.form["stop"]).first().active = False
+        db.session.query(Tracker).filter(Tracker.name == request.form["stop"]).first().active = False
         db.session.commit()
-        flash("Crawler '{}' stopped successfully!".format(request.form["stop"]))
-        return redirect(url_for("crawlers"))
+        flash("Tracker '{}' stopped successfully!".format(request.form["stop"]))
+        return redirect(url_for("trackers"))
 
 
 @app.route('/del_data', methods=["GET", "POST"])

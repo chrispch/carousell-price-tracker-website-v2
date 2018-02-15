@@ -7,20 +7,6 @@ from __init__ import db
 from scrapper import scrap, filter_data, exception_words, price_range, search_data
 from analytics import price_statistics
 
-# global categories, subcategories
-categories = {"Electronics": "https://carousell.com/categories/electronics-7/",
-              "Mobiles & Tablets": "https://carousell.com/categories/mobile-phones-215/"}
-
-subcategories = {"Electronics": {"All": "",
-                                 "Computers": "computers-tablets-213/",
-                                 "TV & Entertainment Systems": "tvs-entertainment-systems-217/",
-                                 "Audio": "audio-207/",
-                                 "Computer Parts & Accessories": "computer-parts-accessories-214/",
-                                 "Others": "electronics-others-218/"},
-                 "Mobiles & Tablets": {"All": "",
-                                       "iPhones": "iphones-1235/",
-                                       "Android": "androidphones-1237/"}}
-
 
 class User(db.Model):
     __tablename__ = "users"

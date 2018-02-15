@@ -7,10 +7,10 @@ from flask_apscheduler import APScheduler
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:hern3010@localhost/price-tracker'
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+# app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 db = SQLAlchemy(app)
-
 preview_content = None
+categories = []
 
 
 class Config(object):
@@ -129,50 +129,30 @@ def crawlers():
 def database():
     try:
         if session["logged_in"]:
-            current_user_id = db.session.query(User.user_id).filter(User.email == session["user_email"]).first()
-            crawler_ids = db.session.query(UsersToCrawlers.crawler_id).filter(UsersToCrawlers.user_id == current_user_id).all()
-            crawler_names = db.session.query(Crawler.name).filter(Crawler.crawler_id.in_(crawler_ids)).all()
-            selected_labels = request.form.getlist("suggested_labels")
-            print(selected_labels)
             if request.method == "POST":
-                # get crawler data
-                current_crawler = request.form["crawler-name"]
+                # get form input
+                current_category = request.form["category"]
                 current_search = request.form["search"]
-                current_crawler_id = db.session.query(Crawler.crawler_id).filter(Crawler.name == current_crawler).first()[0]
-                data_ids = db.session.query(CrawlersToData.data_id).filter(CrawlersToData.crawler_id == current_crawler_id).all()
-                crawler_data = list(db.session.query(Data).filter(Data.data_id.in_(data_ids)).all())
-                suggested_labels = generate_labels(crawler_data)
-                filter_labels = selected_labels
-                # combines selected labels and search terms for filtering
-                if current_search:
-                    filter_labels.append(current_search)
-
-                # filter crawler data
-                if crawler_data:
-                    if filter_labels:
-                        crawler_data = filter_results(filter_labels, crawler_data)
-
+                # get data from selected category
+                data = list(db.session.query(Data).filter(Data.category == current_category).all())
+                # search data based on form input
+                data = search_data(data, current_search)
                 # get price statistics and graph
-                if crawler_data:
-                    price_stats = price_statistics(crawler_data)
-                    graph(crawler_data)
+                if data:
+                    price_stats = price_statistics(data)
+                    graph(data)
 
                     return render_template("database.html", database_nav="nav-link active", crawlers_nav="nav-link",
-                                           crawler_names=crawler_names, current_crawler=current_crawler,
-                                           current_search=current_search, crawler_data=crawler_data,
-                                           suggested_labels=suggested_labels, selected_labels=selected_labels,
-                                           price_stats=price_stats)
+                                           current_search=current_search, data=data, price_stats=price_stats, categories=categories)
                 else:
                     return render_template("database.html", database_nav="nav-link active", crawlers_nav="nav-link",
-                                           crawler_names=crawler_names, current_crawler=current_crawler,
-                                           current_search=current_search, crawler_data=None, suggested_labels=None,
-                                           selected_labels=selected_labels, price_stats=None)
+                                           current_search=current_search, data=None, price_stats=None, categories=categories)
             elif request.method == "GET":
                     return render_template("database.html", database_nav="nav-link active", crawlers_nav="nav-link",
-                                           crawler_names=crawler_names, current_crawler=crawler_names,
-                                           price_stats=None)
+                                           categories=categories)
         else:
                 return redirect(url_for("home"))
+
     except Exception as e:
         return render_template("error.html", error=e)
         # flash("Requested page is only accessible after logging in.")
@@ -314,10 +294,15 @@ def del_data():
 
 if __name__ == "__main__":
     app.debug = True
+    # get urls to scrap
+    urls = get_links()
+    # get keys from urls as category lists
+    global categories
+    for k in urls:
+        categories.append(k)
     # schedule scrapper
     app.config.from_object(Config())
     scheduler = APScheduler()
     scheduler.init_app(app)
     scheduler.start()
     app.run()
-

@@ -5,23 +5,6 @@
 <div class="container" style="padding-top: 10px;">
 	<form action="", method="post", class="border-bottom" style="padding-bottom: 10px;" id="search_field">
 
-		<!-- Crawler Name -->
-		
-		<div class="form-group">
-			<label for="crawler-name">Crawler</label>
-			<select name="crawler-name" class="form-control" id="category" onchange="this.form.submit()">
-				{% for i in crawler_names %}
-				{% for j in i %}
-				{% if j == current_crawler %}
-				<option selected>{{j}}</option>			
-				{% else %}
-				<option>{{j}}</option>
-				{% endif %}
-				{% endfor %}	
-				{% endfor %}
-			</select>						
-		</div>
-		
 
 		<!-- Search Term -->
 		<div class="form-group">
@@ -29,38 +12,27 @@
 			<input name="search" type="text" class="form-control" id="search-term" placeholder="Search your data" value="{{current_search}}" onblur="this.form.submit()">
 		</div>
 
-		<!-- Suggested Labels -->
-		{% if suggested_labels != None %}
-		<div class="form-group">
-			<label>Suggested Labels:</label>
-			{% for lb in suggested_labels %} 
-			<div class="form-check form-check-inline" style="padding-left: 10px;">
-				{% if lb in selected_labels %}
-				<input class="form-check-input" type="checkbox" id="{{lb}}" value="{{lb}}" onchange="this.form.submit()" name="suggested_labels" checked> 
-				{% else %}
-				<input class="form-check-input" type="checkbox" id="{{lb}}" value="{{lb}}" onchange="this.form.submit()" name="suggested_labels">	
-				{% endif %}
-				<label class="form-check-label" for="{{lb}}">{{lb}}</label>
-			</div>
-			{% endfor %}
-		</div>
-		{% else %}
-		<div class="form-group">
-			<label>Suggested Labels</label>
-			<div class="form-check form-check-inline" style="padding-left: 10px;">
-				<input class="form-check-input" type="checkbox" id="None" value="option1" disabled name="None"> 
-				<label class="form-check-label" for="None">None</label>
-			</div>
-		</div>
-		{% endif %}
-
 		<!-- Tolerance Value -->
+
+		<!-- Category -->
+		<div class="form-group col-md-6"
+		<label for="category">Category</label>
+			<select name="category" class="form-control" id="category" onchange="this.form.submit()">
+				{% for i in categories %}
+					{% if i == current_category %}
+						<option selected>{{i}}</option>
+					{% else %}
+						<option>{{i}}</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+		</div>
 
 		<!-- Submit Button -->
 		<button class="btn btn-primary" type="submit">Search</button>
 
 	</form>
-	
+
 
 	<!-- Data Price Stats -->
 	<p class="font-weight-bold" style="font-size: 20px; margin-top: 20px;">Statistics</p>
@@ -95,7 +67,7 @@
 			<div class="col w-75">{% include "graph.html" %}</div>
 		</div>
 	</div>
-	
+
 
 
 	<!-- Returned Data -->
@@ -109,13 +81,13 @@
 				<th scope="col"></th>
 			</tr>
 		</thead>
-		{% if crawler_data != None %}
+		{% if data != None %}
 		<tbody>
-			{% for data in crawler_data %}
+			{% for d in data %}
 			<tr>
-				<td class="w-75"><a href="{{data['link']}}" target="_blank">{{data["name"]}}</a></td>
-				<td>{{data["price"]}}</td>
-				<td>{{data["date"]}}</td>
+				<td class="w-75"><a href="{{d['link']}}" target="_blank">{{d["name"]}}</a></td>
+				<td>{{d["price"]}}</td>
+				<td>{{d["date"]}}</td>
 				<!-- Delete button -->
 				<td><form method="POST"><button class="btn btn-danger" type="submit" formaction="{{ url_for('del_data') }}" value="{{data['data_id']}}" name="delete">X</button></form></td>
 			</tr>
@@ -127,5 +99,5 @@
 </div>
 
 <script src="{{ url_for("static", filename="js/sort.js") }}"></script>
-	
+
 {%endblock%}

@@ -6,22 +6,22 @@ from datetime import date, timedelta
 
 exception_words = ["spoilt", "broken", "1/10", "2/10", "3/10", "4/10"]
 acceptable_price = (1, 9999)  # (min, max)
-urls = {}
 urls_to_crawl = ["all"]
 
 
-# get links to all categories and subcategories on carousell
+# returns links to all categories and subcategories on carousell
 def get_links():
-    global urls
+    urls = {}
     r = requests.get("https://carousell.com/")
     c = r.content
     soup = BeautifulSoup(c, "html.parser")
     nav_bar = soup.find("div", {"id": "navbarCategoryMenuButtonMenu-0"})
     links = nav_bar.find_all("a")
     for l in links:
-        h = l.get('href')
-        t = l.get_text()
+        h = l.get('href')  # href link
+        t = l.get_text()  # category name
         urls[t] = "https://carousell.com/" + h
+    return urls
 
 
 # query and collect listings for a given URL and returns an array with data
@@ -94,11 +94,11 @@ def filter_data(data, name_blacklist, desc_blacklist, price_range):
         valid = True  # set data to successfully pass filter at first
         if name_blacklist:
             for n in name_blacklist:
-                if n in d["name"]:
+                if n in d.name:
                     valid = False
         if desc_blacklist:
             for n in desc_blacklist:
-                if n in d["desc"]:
+                if n in d.desc:
                     valid = False
         if price_range:
             if not price_range[0] < d["price"] < price_range[1]:
@@ -112,6 +112,8 @@ def filter_data(data, name_blacklist, desc_blacklist, price_range):
 def search_data(data, search_terms, tolerance=1):
     search_results = []
     temp_results = []
+    if search_terms is str:
+        search_terms = search_terms.split(" ")
     for f in search_terms:
         # runs for the first filter
         if not search_results:

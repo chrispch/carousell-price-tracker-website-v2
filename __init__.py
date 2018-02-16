@@ -88,23 +88,14 @@ def trackers():
     try:
         if session["logged_in"]:
             # get user's trackers
-            active_trackers = []
-            inactive_trackers = []
-            user_id = db.session.query(User.user_id).filter(User.email == session["user_email"]).first()
-            tracker_ids = db.session.query(UsersToTrackers.tracker_id).filter(UsersToTrackers.user_id == user_id).all()
-            for tracker_id in tracker_ids:
-                tracker = db.session.query(Tracker).filter(Tracker.tracker_id == tracker_id).first()
+            trackers = db.session.query(Tracker).filter(Tracker.user_email == session["user_email"]).all()
+            for tracker in trackers:
                 tracker_info = {}
                 tracker_info["name"] = tracker.name
                 tracker_info["category"] = tracker.category
                 tracker_info["subcategory"] = tracker.subcategory
                 tracker_info["url"] = tracker.url
                 tracker_info["active"] = tracker.active
-                # active trackers
-                if tracker_info["active"]:
-                    active_trackers.append(tracker_info)
-                else:
-                    inactive_trackers.append(tracker_info)
 
             if request.method == "POST":
                 current_category = request.form["category"]
@@ -113,11 +104,10 @@ def trackers():
                 global preview_content
                 preview_content = None
                 return render_template("trackers.html", categories=categories,
-                                       subcategories=subcategories[current_category],
                                        current_category=current_category,
                                        name=current_name, database_nav="nav-link",
-                                       trackers_nav="nav-link active", active_trackers=active_trackers,
-                                       inactive_trackers=inactive_trackers, preview_content=preview_content)
+                                       trackers_nav="nav-link active",
+                                       preview_content=preview_content)
 
             elif request.method == "GET":
                     # on first loading trackers.html

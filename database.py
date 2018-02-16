@@ -63,7 +63,8 @@ def create_user(email, password):
 
 def create_tracker(name, user, category, search, alert_price, alert_percentage):
     # create and add tracker
-    new_tracker = Tracker(name, user, category, search, alert_price, alert_percentage)
+    new_tracker = Tracker(name, user, category, search,
+                          alert_price, alert_percentage)
     db.session.add(new_tracker)
     db.session.commit()
 
@@ -72,15 +73,16 @@ def create_data(name, price, date, link, category):
     new_data = Data(name, price, date, link, category)
     # if listing of same name, price and date not already in database, add data to database
     if db.session.query(Data).filter(Data.name == new_data.name).\
-                              filter(Data.date == new_data.date).\
-                              filter(Data.price == new_data.price).count() == 0:
+            filter(Data.date == new_data.date).\
+            filter(Data.price == new_data.price).count() == 0:
         db.session.add(new_data)
         db.session.commit()
 
 
 def delete_tracker(tracker_name):
     print(tracker_name)
-    trackerid = db.session.query(Tracker.tracker_id).filter(Tracker.name == tracker_name).first()
+    trackerid = db.session.query(Tracker.tracker_id).filter(
+        Tracker.name == tracker_name).first()
     if trackerid:  # if tracker exists
         tracker = db.session.query(Tracker).get(trackerid)
         db.session.delete(tracker)
@@ -113,12 +115,13 @@ def price_alert():
     # get trackers
     trackers = db.session.query(Tracker).all()
     for tracker in trackers:
-        data = db.session.query(Data).filter(Data.category == tracker.category).all()
+        data = db.session.query(Data).filter(
+            Data.category == tracker.category).all()
         results = search_data(data, tracker.search)
         ave_price = price_statistics(results)["ave_price"]
         for d in data:
             if d.price <= tracker.alert_price\
-             or d.price <= ave_price * tracker.alert_percentage:
+                    or d.price <= ave_price * tracker.alert_percentage:
                 print("Data alert: ", d.link)
 
 # TODO: change database location to refer to new table

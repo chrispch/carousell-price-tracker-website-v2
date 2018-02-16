@@ -42,6 +42,7 @@
 				<th scope="col">Max Price:</th>
 				<th scope="col">Min Price:</th>
 				<th scope="col">Average Price:</th>
+				<th scope="col">Median Price:</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -50,6 +51,7 @@
 				<td><p class="text-success">{{price_stats["max_price"]}}</p></td>
 				<td><p class="text-danger">{{price_stats["min_price"]}}</p></td>
 				<td><p class="text-warning">{{price_stats["ave_price"]}}</p></td>
+				<td><p class="text-info">{{price_stats["med_price"]}}</p></td>
 			</tr>
 			{% else %}
 			<tr>

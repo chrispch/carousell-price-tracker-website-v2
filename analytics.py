@@ -1,6 +1,7 @@
 from bokeh.plotting import figure, output_file, show
 from datetime import datetime as dt
 import math
+import statistics
 
 
 def price_statistics(data):
@@ -8,10 +9,13 @@ def price_statistics(data):
     total_price = 0
     price_list = []
     for d in data:
+        # for calculation of average
         total_price += d.price
+        # for finding min/max values and calculation of median
         price_list.append(d.price)
 
-    price_stat["ave_price"] = total_price/len(data)
+    price_stat["med_price"] = statistics.median(price_list)
+    price_stat["ave_price"] = total_price / len(data)
     price_stat["max_price"] = max(price_list)
     price_stat["min_price"] = min(price_list)
     return price_stat

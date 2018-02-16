@@ -1,0 +1,7 @@
+{% block content %}
+  {% for message in get_flashed_messages() %}
+  	<div class="alert alert-warning" role="alert" style="margin: 10px 10px 0px 10px">
+  	  {{message}}
+  	</div>
+  {% endfor %}
+{% endblock %}

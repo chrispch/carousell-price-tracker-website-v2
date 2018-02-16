@@ -3,11 +3,7 @@
 {%block content%}
 
 <!-- Flash messages -->
-{% for message in get_flashed_messages() %}
-	<div class="alert alert-warning" role="alert" style="margin: 10px 10px 0px 10px">
-	  {{message}}
-	</div>
-{% endfor %}
+{% include "flash.html" %}
 
 <!-- Tab Nav -->
 <ul class="nav nav-tabs" id="myTab" role="tablist" style="padding-top: 5px; padding-left: 20px;">
@@ -27,12 +23,10 @@
 			<form action="" method="post" class="border-bottom" style="padding-bottom: 10px; padding-top: 10px;">
 
 				<!-- Tracker Name -->
-
 				<div class="form-group">
 					<label for="tracker-name">Name</label>
-					<input type="text" class="form-control" id="tracker-name" placeholder="Name of tracker" name="name" value="{{name}}" required>
+					<input type="text" class="form-control" id="tracker-name" placeholder="Name of tracker" name="name" value="{{current_name}}" required>
 				</div>
-
 
 				<!-- Category -->
 				<div class="form-group">
@@ -48,7 +42,6 @@
 							</select>
 				</div>
 
-
 				<!-- Search Term -->
 				<div class="form-group">
 					<label for="search">Search</label>
@@ -61,6 +54,7 @@
 						<label for="alert-price">Alert Price</label>
 						<input name="alert-price" type="Number" class="form-control" id="alert-price" value="{{alert_price}}">
 						<small class="form-text text-muted">Set a threshold price for price alerts</small>
+
 					<!-- Alert Percentage -->
 					<div class="col-md-6">
 						<label for="alert_percentage">Alert Percentage</label>
@@ -70,7 +64,7 @@
 				</div>
 
 				<!-- Submit -->
-				<button class="btn btn-primary" type="submit" formaction='{{ url_for("preview") }}'>Preview</button>
+				<button class="btn btn-primary" type="submit" formaction='{{ url_for("database") }}'>Preview</button>
 				<button class="btn btn-primary" type="submit" formaction='{{ url_for("add") }}'>Add Tracker</button>
 			</form>
 		</div>
@@ -87,19 +81,19 @@
 		<div class="container" style="padding-top: 10px;">
 
 			<!-- Message if no trackers -->
-			{% if not active_trackers and not inactive_trackers %}
+			{% if not trackers %}
 				<div class="container" style="padding-top: 10px; padding-left: 10px; padding-right: 10px;">
 					<div class="jumbotron">
 						<h1 class="display-4">You have no trackers</h1>
 						<p class="lead">
-							Add a tracker under the "add" tab to start collecting data
+							Add a tracker under the "add" tab to receive price alerts
 						</p>
 					</div>
 				</div>
 			{% endif %}
 
-			<!-- Generate active trackers -->
-			{% for tracker in active_trackers %}
+			<!-- Generate trackers -->
+			{% for tracker in trackers %}
 			<form action="", method="post" class="border border-dark rounded" style="padding: 20px 20px 10px 20px; margin-bottom: 10px;">
 				<div class="form-row">
 					<!-- Name -->
@@ -112,29 +106,29 @@
 						<label for="category" class="font-weight-bold">Category</label>
 						<input type="text" id="category" value="{{tracker['category']}}" name="category" readonly class="form-control-plaintext">
 					</div>
-					<!-- Subcategory -->
-					<div class="form-group col-md-3">
-						<label for="subcategory" class="font-weight-bold">Subcategory</label>
-						<input type="text" id="subcategory" value="{{tracker['subcategory']}}" name="subcategory" readonly class="form-control-plaintext">
-					</div>
-				</div>
 
 				<div class="form-row">
-					<!-- URL -->
+					<!-- Search -->
 					<div class="form-group col-md-6">
-						<label for="url" class="font-weight-bold">URL</label>
-						<input name="url" type="text" placeholder="-" id="url" value="{{tracker['url']}}" readonly class="form-control-plaintext">
+						<label for="search" class="font-weight-bold">Search Term</label>
+						<input name="search" type="text" placeholder="-" id="search" value="{{tracker['search']}}" readonly class="form-control-plaintext">
 					</div>
-					<!-- Status -->
+					<!-- Alert Price -->
 					<div class="form-group col-md-2">
-						<label for="status" class="font-weight-bold">Status</label>
-						<input name="status" type="text" id="status" value="Running..." readonly class="form-control-plaintext">
+						<label for="alert_price" class="font-weight-bold">Alert Price</label>
+						<input name="alert_price" type="text" id="alert_percentage" value="{{tracker['alert_price']}}" readonly class="form-control-plaintext">
 					</div>
+					<!-- Alert Percentage -->
+					<div class="form-group col-md-2">
+						<label for="alert_percentage" class="font-weight-bold">Alert Percentage</label>
+						<input name="alert_percentage" type="text" id="alert_percentage" value="{{tracker['alert_percentage']}}" readonly class="form-control-plaintext">
+					</div>
+				</div>
+				<div class="form-row">
 					<!-- Submit Buttons -->
 					<div class="form-group ml-auto mt-auto">
-						<button class="btn btn-primary" type="submit" formaction="{{ url_for('info_tracker') }}">Get Info</button>
-						<button class="btn btn-primary" type="submit" formaction="{{ url_for('rename_tracker') }}" value="{{tracker['name']}}" name="rename">Rename</button>
-						<button class="btn btn-danger" type="submit" formaction="{{ url_for('stop_tracker') }}" value="{{tracker['name']}}" name="stop">Stop</button>
+						<button class="btn btn-primary" type="submit" formaction="{{ url_for('database') }}">Get Info</button>
+						<button class="btn btn-danger" type="submit" formaction="{{ url_for('rename_tracker') }}" value="{{tracker['name']}}" name="rename">Rename</button>
 						<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#{{tracker['name']}}">Delete</button>
 						<!-- Tracker delete modal -->
 						<div class="modal fade" id="{{tracker['name']}}" tabindex="-1" role="dialog" aria-labelledby="delete_modal" aria-hidden="true">
@@ -154,49 +148,6 @@
 						    </div>
 						  </div>
 						</div>
-					</div>
-				</div>
-			</form>
-			{% endfor %}
-
-			<!-- Generate inactive trackers -->
-			{% for tracker in inactive_trackers %}
-			<form action="", method="post" class="border border-dark rounded" style="padding: 20px 20px 10px 20px; margin-bottom: 10px;">
-				<div class="form-row">
-					<!-- Name -->
-					<div class="form-group col-md-6" style="padding-right: 10px;">
-						<label for="tracker-name" class="font-weight-bold">Name</label>
-						<input type="text" id="tracker-name" value="{{tracker['name']}}" name="name" class="form-control">
-					</div>
-					<!-- Category -->
-					<div class="form-group col-md-3">
-						<label for="category" class="font-weight-bold">Category</label>
-						<input type="text" id="category" value="{{tracker['category']}}" name="category" readonly class="form-control-plaintext">
-					</div>
-					<!-- Subcategory -->
-					<div class="form-group col-md-3">
-						<label for="subcategory" class="font-weight-bold">Subcategory</label>
-						<input type="text" id="subcategory" value="{{tracker['subcategory']}}" name="subcategory" readonly class="form-control-plaintext">
-					</div>
-				</div>
-
-				<div class="form-row">
-					<!-- URL -->
-					<div class="form-group col-md-6">
-						<label for="url" class="font-weight-bold">URL</label>
-						<input name="url" type="text" placeholder="-" id="url" value="{{tracker['url']}}" readonly class="form-control-plaintext">
-					</div>
-					<!-- Status -->
-					<div class="form-group col-md-2">
-						<label for="status" class="font-weight-bold">Status</label>
-						<input name="status" type="text" id="status" value="Paused" readonly class="form-control-plaintext">
-					</div>
-					<!-- Submit Buttons -->
-					<div class="form-group ml-auto mt-auto">
-						<button class="btn btn-primary" type="submit" formaction='{{ url_for("info_tracker") }}'>Get Info</button>
-						<button class="btn btn-primary" type="submit" formaction='{{ url_for("rename_tracker") }}' name="{{tracker['name']}}">Rename</button>
-						<button class="btn btn-success" type="submit" formaction='{{ url_for("start_tracker") }}' value="{{tracker['name']}}" name="start">Start</button>
-						<button class="btn btn-danger" type="submit" formaction='{{ url_for("del_tracker") }}' value="{{tracker['name']}}" name="delete">Delete</button>
 					</div>
 				</div>
 			</form>

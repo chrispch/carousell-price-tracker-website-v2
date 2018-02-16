@@ -29,11 +29,13 @@ class Tracker(db.Model):
     alert_price = db.Column(db.Float)
     alert_percentage = db.Column(db.Float)
 
-    def __init__(self, name, user_email, category, search):
+    def __init__(self, name, user_email, category, search, alert_price, alert_percentage):
         self.name = name
         self.user_email = user_email
         self.category = category
         self.search = search
+        self.alert_price = alert_price
+        self.alert_percentage = alert_percentage
 
 
 class Data(db.Model):

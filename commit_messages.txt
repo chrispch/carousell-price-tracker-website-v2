@@ -1,0 +1,6 @@
+separated flash function into separate module
+removed preview route and added functionality directly into trackers
+streamlined trackers route
+updated add route
+removed get_info route, get_info button directly posts to database
+-

@@ -16,10 +16,10 @@ def send_alert(to_email, listing):
     gmail.send_message(msg)
 
 
-def send_confirmation(to_email):
-
+def send_confirmation(to_email, html_template):
+    message = html_template
     msg = MIMEText(message, 'html')
-    msg['Subject'] = "Carousell-price-tracker Email Confirmation"
+    msg['Subject'] = "Carousell-Price-Tracker Email Confirmation"
     msg['To'] = to_email
     msg['From'] = from_email
     gmail = smtplib.SMTP('smtp.gmail.com', 587)

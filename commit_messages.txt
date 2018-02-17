@@ -12,3 +12,6 @@ debugged scrapper and apscheduler. scrapper does not seem to run in atom but run
 completed scrapping same data in multiple categories
 added decorators for login and redirecting get
 site works fine now
+-
+added email functionality and confirm email function!
+-

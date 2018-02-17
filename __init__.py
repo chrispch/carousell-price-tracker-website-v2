@@ -1,18 +1,21 @@
 from flask import Flask, request, session, redirect, url_for, render_template, flash
 from flask_apscheduler import APScheduler
+from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 from analytics import price_statistics, graph
-from database import create_tracker, create_user, delete_tracker, delete_data, scrap_into_database
-from scrapper import scrap, filter_data, search_data, exception_words, price_range
+from apscheduler.schedulers.background import BackgroundScheduler
+# from database import create_tracker, create_user, delete_tracker, delete_data, scrap_into_database
+# from scrapper import scrap, filter_data, search_data, exception_words, price_range
+from database import *
+from scrapper import *
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:hern3010@localhost/price-tracker'
-# app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.config['SQLALCHEMY_DATABASE_URI']='postgresql://postgres:hern3010@localhost/price-tracker-v2'
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 db = SQLAlchemy(app)
 preview_content = None
-categories = []
-categories_to_crawl = ["Electronics"]
-urls_to_crawl = {}
+categories = ["Electronics", "Audio"]
+urls_to_crawl = []
 
 
 class Config(object):
@@ -20,7 +23,7 @@ class Config(object):
         {
             'id': 'scrap_into_database',
             'func': 'database:scrap_into_database',
-            'args': 'urls_to_crawl',
+            'args': urls_to_crawl,
             'trigger': 'interval',
             'seconds': 60
         },
@@ -179,8 +182,6 @@ def add():
             return redirect(url_for("trackers"))
         if create_tracker(current_name, current_user, current_category, current_search, alert_price, alert_percentage):
             flash("Tracker '{}' added successfully!".format(current_name))
-            url = urls_to_crawl[current_category]
-            scrap_into_database(url)
         else:
             flash("Tracker name is already in use. Please try again.")
         return redirect(url_for("trackers"))
@@ -228,13 +229,16 @@ if __name__ == "__main__":
     urls = get_links()
     global urls_to_crawl
     global categories
-    for k in urls:
-        # get urls to scrap
-        if k in categories_to_crawl:
-            # get keys from urls as category lists
-            categories.append(k)
-            urls_to_crawl[k] = urls[k]
+    for c in categories:
+        if c in urls.keys():
+            urls_to_crawl.append(urls[c] + "?sort_by=time_created%2Cdescending")
 
+    # for k in urls:
+    #     # get urls to scrap
+    #     if k in categories:
+    #         # get keys from urls as category lists
+    #         categories.append(k)
+    #         urls_to_crawl.append(urls[k] + "?sort_by=time_created%2Cdescending")
     # schedule scrapper
     app.config.from_object(Config())
     scheduler = APScheduler()

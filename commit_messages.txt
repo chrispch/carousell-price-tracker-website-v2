@@ -7,3 +7,6 @@ removed get_info route, get_info button directly posts to database
 added median functionality to price_statistics and added it to database.html
 edited sort.js
 sort.js left incomplete. need to fix getElementByTags reference error in recursions.
+-
+debugged scrapper and apscheduler. scrapper does not seem to run in atom but runs fine in pycharm, no idea why.
+completed scrapping same data in multiple categories

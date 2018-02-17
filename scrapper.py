@@ -5,11 +5,12 @@ from datetime import date, timedelta
 
 
 exception_words = ["spoilt", "broken", "1/10", "2/10", "3/10", "4/10"]
-acceptable_price = (1, 9999)  # (min, max)
+price_range = (1, 9999)  # (min, max)
 
 
 # returns links to all categories and subcategories on carousell
 def get_links():
+    print("Getting links!")
     urls = {}
     r = requests.get("https://carousell.com/")
     c = r.content
@@ -19,7 +20,7 @@ def get_links():
     for l in links:
         h = l.get('href')  # href link
         t = l.get_text()  # category name
-        urls[t] = "https://carousell.com/" + h
+        urls[t] = "https://carousell.com" + h
     return urls
 
 
@@ -31,12 +32,10 @@ def scrap(url):
         r = requests.get(url)
         c = r.content
         soup = BeautifulSoup(c, "html.parser")
-        names = soup.find_all(
-            "h4", {"id": "productCardTitle"})  # name of listing
+        names = soup.find_all("h4", {"id": "productCardTitle"})  # name of listing
         info = soup.find_all("dl")  # contains price and desc
         time_ago = soup.find_all("time")  # time of posting
-        hyperlinks = soup.find_all(
-            "a", {"id": "productCardThumbnail"})  # link to listing
+        hyperlinks = soup.find_all("a", {"id": "productCardThumbnail"})  # link to listing
 
         # remove duplicate hyperlinks
         for i in range(len(hyperlinks) - 1, -1, -1):
@@ -93,11 +92,11 @@ def filter_data(data, name_blacklist, desc_blacklist, price_range):
         valid = True  # set data to successfully pass filter at first
         if name_blacklist:
             for n in name_blacklist:
-                if n in d.name:
+                if n in d["name"]:
                     valid = False
         if desc_blacklist:
             for n in desc_blacklist:
-                if n in d.desc:
+                if n in d["desc"]:
                     valid = False
         if price_range:
             if not price_range[0] < d["price"] < price_range[1]:
@@ -143,6 +142,7 @@ def search_data(data, search_terms, tolerance=1):
 
 # get_links()
 # print(scrap("https://carousell.com/categories/electronics-7/audio-207/"))
+# print(filter_data(scrap("https://carousell.com/categories/electronics-7/audio-207/"), exception_words, exception_words, price_range))
 # generate_labels(data["sennheiser"])
 # print(search_database(["sennheiser", "headphones"], [data["sennheiser"]]))
 

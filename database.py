@@ -3,7 +3,7 @@
 # from sqlalchemy.ext.declarative import declarative_base
 # from flask_sqlalchemy import SQLAlchemy
 
-from __init__ import db
+from __init__ import db, categories
 from scrapper import scrap, filter_data, exception_words, price_range, search_data
 from analytics import price_statistics
 
@@ -73,12 +73,18 @@ def create_tracker(name, user, category, search, alert_price, alert_percentage):
 
 def create_data(name, price, date, link, category):
     new_data = Data(name, price, date, link, category)
+    query_data = db.session.query(Data).filter(Data.name == new_data.name). \
+        filter(Data.date == new_data.date). \
+        filter(Data.price == new_data.price)
     # if listing of same name, price and date not already in database, add data to database
-    if db.session.query(Data).filter(Data.name == new_data.name).\
-            filter(Data.date == new_data.date).\
-            filter(Data.price == new_data.price).count() == 0:
+    if query_data.count() == 0:
         db.session.add(new_data)
         db.session.commit()
+    # if same listing has multiple categories, add new category to data
+    elif query_data.filter(Data.category.in_(category)).count() == 0:
+        print("multiple categories!")
+        to_append = ", " + category
+        query_data.first().category += to_append
 
 
 def delete_tracker(tracker_name):
@@ -103,10 +109,12 @@ def delete_all_data():
         db.session.commit()
 
 
-def scrap_into_database(urls):
+# saves crawled data in database
+def scrap_into_database(*urls):
     print("Scrapping into database")
-    # saves crawled data in database
-    for category, url in urls.items():
+    print(urls)
+    for category, url in zip(categories, urls):
+        print(category, url)
         data = scrap(url)
         data = filter_data(data, exception_words, exception_words, price_range)
         for d in data:
@@ -126,11 +134,10 @@ def price_alert():
                     or d.price <= ave_price * tracker.alert_percentage:
                 print("Data alert: ", d.link)
 
-# TODO: change database location to refer to new table
 
 
 db.create_all()
-# delete_all_data()
+delete_all_data()
 
 
 # create_user(email="test1@mail.com", password="pw")

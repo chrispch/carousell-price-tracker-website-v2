@@ -6,6 +6,7 @@
 from __init__ import db, categories
 from scrapper import scrap, filter_data, exception_words, price_range, search_data
 from analytics import price_statistics
+from send_email import send_alert
 
 
 class User(db.Model):
@@ -22,7 +23,7 @@ class User(db.Model):
 class Tracker(db.Model):
     __tablename__ = "trackers"
     tracker_id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, unique=True)
     user_email = db.Column(db.String)
     category = db.Column(db.String)
     search = db.Column(db.String)
@@ -65,10 +66,12 @@ def create_user(email, password):
 
 def create_tracker(name, user, category, search, alert_price, alert_percentage):
     # create and add tracker
-    new_tracker = Tracker(name, user, category, search,
-                          alert_price, alert_percentage)
-    db.session.add(new_tracker)
-    db.session.commit()
+    if db.session.query(Tracker).filter(Tracker.name == name).count() == 0:
+        new_tracker = Tracker(name, user, category, search,
+                              alert_price, alert_percentage)
+        db.session.add(new_tracker)
+        db.session.commit()
+        return True
 
 
 def create_data(name, price, date, link, category):
@@ -79,12 +82,14 @@ def create_data(name, price, date, link, category):
     # if listing of same name, price and date not already in database, add data to database
     if query_data.count() == 0:
         db.session.add(new_data)
+        price_alert(new_data)
         db.session.commit()
     # if same listing has multiple categories, add new category to data
-    elif query_data.filter(Data.category.in_(category)).count() == 0:
+    elif category not in query_data.first().category.split(", "):
         print("multiple categories!")
         to_append = ", " + category
         query_data.first().category += to_append
+        db.session.commit()
 
 
 def delete_tracker(tracker_name):
@@ -121,23 +126,27 @@ def scrap_into_database(*urls):
             create_data(d["name"], d["price"], d["date"], d["link"], category)
 
 
-def price_alert():
+def price_alert(listing):
     # get trackers
     trackers = db.session.query(Tracker).all()
     for tracker in trackers:
         data = db.session.query(Data).filter(
             Data.category == tracker.category).all()
         results = search_data(data, tracker.search)
-        ave_price = price_statistics(results)["ave_price"]
-        for d in data:
-            if d.price <= tracker.alert_price\
-                    or d.price <= ave_price * tracker.alert_percentage:
-                print("Data alert: ", d.link)
+        if results:
+            ave_price = price_statistics(results)["ave_price"]
+        # if listing is tracked by tracker
+        if listing in results:
+            # if listing price triggers price alert
+            if listing.price <= tracker.alert_price\
+                    or listing.price <= ave_price * tracker.alert_percentage:
+                print("Data alert: ", listing.link)
+                print("Tracked by: ", tracker.user_email)
 
 
 
 db.create_all()
-delete_all_data()
+
 
 
 # create_user(email="test1@mail.com", password="pw")

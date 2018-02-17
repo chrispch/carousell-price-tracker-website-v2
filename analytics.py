@@ -5,20 +5,27 @@ import statistics
 
 
 def price_statistics(data):
-    price_stat = {}
+    price_stats = {}
     total_price = 0
     price_list = []
-    for d in data:
-        # for calculation of average
-        total_price += d.price
-        # for finding min/max values and calculation of median
-        price_list.append(d.price)
+    if type(data[0]) is dict:
+        for d in data:
+            # for calculation of average
+            total_price += d["price"]
+            # for finding min/max values and calculation of median
+            price_list.append(d["price"])
+    else:
+        for d in data:
+            # for calculation of average
+            total_price += d.price
+            # for finding min/max values and calculation of median
+            price_list.append(d.price)
 
-    price_stat["med_price"] = statistics.median(price_list)
-    price_stat["ave_price"] = total_price / len(data)
-    price_stat["max_price"] = max(price_list)
-    price_stat["min_price"] = min(price_list)
-    return price_stat
+    price_stats["med_price"] = statistics.median(price_list)
+    price_stats["ave_price"] = total_price / len(data)
+    price_stats["max_price"] = max(price_list)
+    price_stats["min_price"] = min(price_list)
+    return price_stats
 
 
 def graph(data):
@@ -86,19 +93,17 @@ def graph(data):
                             u = min([u, i])
                             # print("we're going up!: " + str(u))
                             # print("max", i)
-            # print(dates)
 
         # find average price
         for i in range(len(prices)):
             prices[i] = prices[i][0] / prices[i][1]
 
-        p = figure(tools="", logo=None, x_axis_type="datetime", responsive=True, plot_height=300, title="Price - Time")
+        p = figure(tools="box_zoom, reset, save", logo=None, x_axis_type="datetime", responsive=True, plot_height=300, title="Price - Time")
 
         p.line(dates, prices)
     else:
         p = figure(tools="", logo=None, x_axis_type="datetime", responsive=True, plot_height=300, title="Price - Time")
         p.line(dates, prices)
-        # print("Nothing to see here!")
 
     output_file("./templates/graph.html")
     show(p)

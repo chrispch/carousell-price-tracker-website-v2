@@ -9,13 +9,13 @@
 		<!-- Search Term -->
 		<div class="form-group">
 			<label for="search-term">Search</label>
-			<input name="search" type="text" class="form-control" id="search-term" placeholder="Search your data" value="{{current_search}}" onblur="this.form.submit()">
+			<input name="search" type="text" class="form-control" id="search-term" placeholder="Search database" value="{{current_search}}" onblur="this.form.submit()">
 		</div>
 
 		<!-- Tolerance Value -->
 
 		<!-- Category -->
-		<div class="form-group col-md-6"
+		<div class="form-group"
 		<label for="category">Category</label>
 			<select name="category" class="form-control" id="category" onchange="this.form.submit()">
 				{% for i in categories %}
@@ -64,6 +64,7 @@
 	</table>
 
 	<!-- Graph -->
+	<p class="font-weight-bold" style="font-size: 20px; margin-top: 20px;">Graph</p>
 	<div class="container">
 		<div class="row">
 			<div class="col w-75">{% include "graph.html" %}</div>
@@ -73,7 +74,7 @@
 
 
 	<!-- Returned Data -->
-	<p class="font-weight-bold" style="font-size: 20px">Data</p>
+	<p class="font-weight-bold" style="font-size: 20px; margin-top:20px;">Data</p>
 	<table class="table" id="returned-data">
 		<thead>
 			<tr>
@@ -91,9 +92,15 @@
 				<td>{{d["price"]}}</td>
 				<td>{{d["date"]}}</td>
 				<!-- Delete button -->
-				<td><form method="POST"><button class="btn btn-danger" type="submit" formaction="{{ url_for('del_data') }}" value="{{data['data_id']}}" name="delete">X</button></form></td>
+				<!-- <td><form method="POST"><button class="btn btn-danger" type="submit" formaction="{{ url_for('del_data') }}" value="{{data['data_id']}}" name="delete">X</button></form></td> -->
 			</tr>
 			{% endfor %}
+		{% else %}
+			<tr>
+				<td><p>-</p></td>
+				<td><p>-</p></td>
+				<td><p>-</p></td>
+			</tr>
 		</tbody>
 		{% endif %}
 	</table>

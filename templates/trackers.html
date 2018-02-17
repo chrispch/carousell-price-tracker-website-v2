@@ -43,26 +43,26 @@
 				<!-- Search Term -->
 				<div class="form-group">
 					<label for="search">Search</label>
-					<input name="search" type="text" class="form-control" id="search" placeholder="Track a specific query" value="{{current_search}}" required>
+					<input name="search" type="text" class="form-control" id="search" placeholder="Track a specific query" value="{{current_search}}">
 				</div>
 
 				<div class="form-row">
 					<!-- Alert Price -->
 					<div class="col-md-4">
 						<label for="alert-price">Alert Price</label>
-						<input name="alert-price" type="Number" class="form-control" id="alert-price" value="{{alert_price}}">
+						<input name="alert_price" type="Number" class="form-control" id="alert-price" value="{{alert_price}}" required>
 						<small class="form-text text-muted">Set a threshold price for price alerts</small>
 					</div>
 
 					<!-- Alert Percentage -->
 					<div class="col-md-4">
 						<label for="alert_percentage">Alert Percentage</label>
-						<input name="alert_percentage" type="Number" class="form-control" id="alert_percentage" value="{{alert_percentage}}">
+						<input name="alert_percentage" type="Number" class="form-control" id="alert_percentage" value="{{alert_percentage}}" required>
 						<small class="form-text text-muted">Set a threshold percentage (of average price) for price alerts</small>
 					</div>
 					<div class="form-group ml-auto mt-auto">
 						<!-- Submit -->
-						<button class="btn btn-primary" type="submit" formaction='{{ url_for("database") }}'>Preview</button>
+						<button class="btn btn-primary" type="submit" formaction='{{ url_for("trackers") }}'>Preview</button>
 						<button class="btn btn-primary" type="submit" formaction='{{ url_for("add") }}'>Add Tracker</button>
 					</div>
 				</div>
@@ -108,53 +108,52 @@
 						<label for="category" class="font-weight-bold">Category</label>
 						<input type="text" id="category" value="{{tracker['category']}}" name="category" readonly class="form-control-plaintext">
 					</div>
-
-					<div class="form-row">
-						<!-- Search -->
-						<div class="form-group col-md-6">
-							<label for="search" class="font-weight-bold">Search Term</label>
-							<input name="search" type="text" placeholder="-" id="search" value="{{tracker['search']}}" readonly class="form-control-plaintext">
-						</div>
-						<!-- Alert Price -->
-						<div class="form-group col-md-2">
-							<label for="alert_price" class="font-weight-bold">Alert Price</label>
-							<input name="alert_price" type="text" id="alert_percentage" value="{{tracker['alert_price']}}" readonly class="form-control-plaintext">
-						</div>
-						<!-- Alert Percentage -->
-						<div class="form-group col-md-2">
-							<label for="alert_percentage" class="font-weight-bold">Alert Percentage</label>
-							<input name="alert_percentage" type="text" id="alert_percentage" value="{{tracker['alert_percentage']}}" readonly class="form-control-plaintext">
-						</div>
+				</div>
+				<div class="form-row">
+					<!-- Search -->
+					<div class="form-group col-md-6">
+						<label for="search" class="font-weight-bold">Search Term</label>
+						<input name="search" type="text" placeholder="-" id="search" value="{{tracker['search']}}" readonly class="form-control-plaintext">
 					</div>
-					<div class="form-row">
-						<!-- Submit Buttons -->
-						<div class="form-group ml-auto mt-auto">
-							<button class="btn btn-primary" type="submit" formaction="{{ url_for('database') }}">Get Info</button>
-							<button class="btn btn-danger" type="submit" formaction="{{ url_for('rename_tracker') }}" value="{{tracker['name']}}" name="rename">Rename</button>
-							<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#{{tracker['name']}}">Delete</button>
-							<!-- Tracker delete modal -->
-							<div class="modal fade" id="{{tracker['name']}}" tabindex="-1" role="dialog" aria-labelledby="delete_modal" aria-hidden="true">
-								<div class="modal-dialog" role="document">
-									<div class="modal-content">
-										<div class="modal-header">
-											<h5 class="modal-title" id="delete_modal_label">Confirm Delete</h5>
-											<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-						          <span aria-hidden="true">&times;</span>
-						        </button>
-										</div>
-										<div class="modal-body">
-											<p>Are you sure you want to delete this data? Data will not be recoverable.</p>
-											<button class="btn btn-danger" type="submit" formaction="{{ url_for('del_tracker') }}" value="{{tracker['name']}}" name="delete">Delete</button>
-											<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-										</div>
+					<!-- Alert Price -->
+					<div class="form-group col-md-2">
+						<label for="alert_price" class="font-weight-bold">Alert Price</label>
+						<input name="alert_price" type="text" id="alert_percentage" value="{{tracker['alert_price']}}" readonly class="form-control-plaintext">
+					</div>
+					<!-- Alert Percentage -->
+					<div class="form-group col-md-2">
+						<label for="alert_percentage" class="font-weight-bold">Alert Percentage</label>
+						<input name="alert_percentage" type="text" id="alert_percentage" value="{{tracker['alert_percentage']}}" readonly class="form-control-plaintext">
+					</div>
+				</div>
+				<div class="form-row">
+					<!-- Submit Buttons -->
+					<div class="form-group ml-auto mt-auto">
+						<button class="btn btn-primary" type="submit" formaction="{{ url_for('database') }}">Get Info</button>
+						<button class="btn btn-danger" type="submit" formaction="{{ url_for('rename_tracker') }}" value="{{tracker['name']}}" name="rename">Rename</button>
+						<button type="button" class="btn btn-danger" data-toggle="modal" data-target="#{{tracker['name']}}">Delete</button>
+						<!-- Tracker delete modal -->
+						<div class="modal fade" id="{{tracker['name']}}" tabindex="-1" role="dialog" aria-labelledby="delete_modal" aria-hidden="true">
+							<div class="modal-dialog" role="document">
+								<div class="modal-content">
+									<div class="modal-header">
+										<h5 class="modal-title" id="delete_modal_label">Confirm Delete</h5>
+										<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					          <span aria-hidden="true">&times;</span>
+					        </button>
+									</div>
+									<div class="modal-body">
+										<p>Are you sure you want to delete "{{tracker['name']}}"?</p>
+										<button class="btn btn-danger" type="submit" formaction="{{ url_for('del_tracker') }}" value="{{tracker['name']}}" name="delete">Delete</button>
+										<button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
 									</div>
 								</div>
 							</div>
 						</div>
 					</div>
+				</div>
 			</form>
 			{% endfor %}
-			</div>
 		</div>
 	</div>
 </div>

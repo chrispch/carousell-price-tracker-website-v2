@@ -10,3 +10,5 @@ sort.js left incomplete. need to fix getElementByTags reference error in recursi
 -
 debugged scrapper and apscheduler. scrapper does not seem to run in atom but runs fine in pycharm, no idea why.
 completed scrapping same data in multiple categories
+added decorators for login and redirecting get
+site works fine now

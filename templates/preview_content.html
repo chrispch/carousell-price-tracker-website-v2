@@ -1,4 +1,25 @@
 {%block content%}
+	<!-- Data Price Stats -->
+	{% if price_stats != None %}
+	<table class="table">
+		<thead>
+			<tr>
+				<th scope="col">Max Price:</th>
+				<th scope="col">Min Price:</th>
+				<th scope="col">Average Price:</th>
+				<th scope="col">Median Price:</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><p class="text-success">{{price_stats["max_price"]}}</p></td>
+				<td><p class="text-danger">{{price_stats["min_price"]}}</p></td>
+				<td><p class="text-warning">{{price_stats["ave_price"]}}</p></td>
+				<td><p class="text-info">{{price_stats["med_price"]}}</p></td>
+			</tr>
+		{% endif %}
+		</tbody>
+	</table>
 	{% if preview_content != None %}
 	<table class="table" id="returned-data">
 		<thead>
@@ -19,8 +40,8 @@
 			{% endfor %}
 		</tbody>
 	</table>
-	
-	<p class="text-center">- Preview content -</p> 
+
+	<p class="text-center">- Preview content -</p>
 	<script src="{{ url_for("static", filename="js/sort.js") }}"></script>
 	{% endif %}
 {%endblock%}

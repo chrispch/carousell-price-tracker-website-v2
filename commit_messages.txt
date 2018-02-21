@@ -15,3 +15,4 @@ site works fine now
 -
 added email functionality and confirm email function!
 -
+todo: test invalid confirmation, add price_alert email, prettify email templates

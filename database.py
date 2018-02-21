@@ -21,6 +21,7 @@ class User(db.Model):
         self.password = password
         self.confirmed = False
 
+
 class Tracker(db.Model):
     __tablename__ = "trackers"
     tracker_id = db.Column(db.Integer, primary_key=True)

@@ -14,11 +14,12 @@ class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String, unique=True)
     password = db.Column(db.String)
+    confirmed = db.Column(db.Boolean)
 
     def __init__(self, email, password):
         self.email = email
         self.password = password
-
+        self.confirmed = False
 
 class Tracker(db.Model):
     __tablename__ = "trackers"

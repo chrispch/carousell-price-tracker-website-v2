@@ -98,8 +98,48 @@ def register():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
-        return redirect(url_for("home"))
-
+        email = request.form["email"]
+        password = sha256_crypt.encrypt(request.form["password"])
+        # if account exists but not yet confirmed, recreate account and send confirmation email
+        if db.session.query(User).filter(User.email == email).count() != 0:
+            if not db.session.query(User).filter(User.email == email).first().confirmed:
+                # delete user
+                db.session.delete(db.session.query(User).filter(User.email == email).first())
+                db.session.commit()
+                # create user
+                if create_user(email, password):
+                    # generate token and confirm url
+                    token = generate_confirmation_token(email, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
+                    confirm_url = url_for("confirm_email", token=token, _external=True)
+                    # generate html template
+                    html_template = render_template("confirm_email_template.html", confirm_url=confirm_url)
+                    # send confirmation email
+                    send_confirmation(email, html_template)
+                    # print("recreating account")
+                    flash("Please check your email for confirmation.")
+                    return redirect(url_for("home"))
+                else:
+                    flash("Email is already in use, please try again.")
+                    return redirect(url_for("home"))
+        # create account if it does not exist
+        elif db.session.query(User).filter(User.email == email).count() == 0:
+            # create user
+            if create_user(email, password):
+                # generate token and confirm url
+                token = generate_confirmation_token(email, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
+                confirm_url = url_for("confirm_email", token=token, _external=True)
+                # generate html template
+                html_template = render_template("confirm_email_template.html", confirm_url=confirm_url)
+                # send confirmation email
+                send_confirmation(email, html_template)
+                flash("Please check your email for confirmation.")
+                return redirect(url_for("home"))
+            else:
+                flash("Email is already in use, please try again.")
+                return redirect(url_for("home"))
+        else:
+            flash("Account is already created")
+            return redirect(url_for("home"))
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
     session['logged_in'] = False

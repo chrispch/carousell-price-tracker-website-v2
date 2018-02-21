@@ -3,17 +3,21 @@ from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 from functools import wraps
+from itsdangerous import BadSignature
 from analytics import price_statistics, graph
 from database import *
 from scrapper import *
-from send_email import send_alert
+from send_email import send_alert, send_confirmation
 from confirmation_tokens import generate_confirmation_token, confirm_token
+#import os
 
-
+#basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hern3010@localhost/price-tracker-v2'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SECURITY_PASSWORD_SALT'] = "cant_guess_this"
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.config['LOG_FILE'] = '/var/log/price_tracker/application.log'
+#app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 db = SQLAlchemy(app)
 
 preview_content = None
@@ -33,6 +37,7 @@ class Config(object):
     ]
 
 
+# Decorators
 def login_required(func):
     @wraps(func)
     def decorated_function(*args, **kwargs):
@@ -54,6 +59,7 @@ def redirect_get(func):
     return decorated_function
 
 
+# View
 @app.route('/')
 def home():
     return render_template("home.html", database_nav="nav-link",
@@ -69,6 +75,9 @@ def login():
         password = request.form["password"]
         if db.session.query(User).filter(User.email == email).count() == 0:
             flash("Email is not registered. Please register before logging in.")
+            return redirect(url_for("home"))
+        elif not db.session.query(User).filter(User.email == email).first().confirmed:
+            flash("Please confirm your email and try again.")
             return redirect(url_for("home"))
         else:
             encrypted_password = db.session.query(User.password).filter(User.email == email).first()[0]
@@ -88,12 +97,45 @@ def register():
     elif request.method == "POST":
         email = request.form["email"]
         password = sha256_crypt.encrypt(request.form["password"])
-        if create_user(email, password):
-            session['logged_in'] = True
-            session["user_email"] = email
-            return redirect(url_for("home"))
+        # if account exists but not yet confirmed, recreate account and send confirmation email
+        if db.session.query(User).filter(User.email == email).count() != 0:
+            if not db.session.query(User).filter(User.email == email).first().confirmed:
+                # delete user
+                db.session.delete(db.session.query(User).filter(User.email == email).first())
+                db.session.commit()
+                # create user
+                if create_user(email, password):
+                    # generate token and confirm url
+                    token = generate_confirmation_token(email, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
+                    confirm_url = url_for("confirm_email", token=token, _external=True)
+                    # generate html template
+                    html_template = render_template("confirm_email_template.html", confirm_url=confirm_url)
+                    # send confirmation email
+                    send_confirmation(email, html_template)
+                    # print("recreating account")
+                    flash("Please check your email for confirmation.")
+                    return redirect(url_for("home"))
+                else:
+                    flash("Email is already in use, please try again.")
+                    return redirect(url_for("home"))
+        # create account if it does not exist
+        elif db.session.query(User).filter(User.email == email).count() == 0:
+            # create user
+            if create_user(email, password):
+                # generate token and confirm url
+                token = generate_confirmation_token(email, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
+                confirm_url = url_for("confirm_email", token=token, _external=True)
+                # generate html template
+                html_template = render_template("confirm_email_template.html", confirm_url=confirm_url)
+                # send confirmation email
+                send_confirmation(email, html_template)
+                flash("Please check your email for confirmation.")
+                return redirect(url_for("home"))
+            else:
+                flash("Email is already in use, please try again.")
+                return redirect(url_for("home"))
         else:
-            flash("Email is already in use, please try again.")
+            flash("Account is already created")
             return redirect(url_for("home"))
 
 
@@ -102,6 +144,27 @@ def logout():
     session['logged_in'] = False
     session['user_email'] = None
     return redirect(url_for("home"))
+
+
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        email = confirm_token(token, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
+        # if email already confirmed
+        if db.session.query(User).filter(User.email == email).first().confirmed:
+            flash('Account already confirmed. Please login.', 'success')
+            return redirect(url_for("home"))
+        else:
+            # update session variables
+            session["user_email"] = email
+            session['logged_in'] = True
+            # update database
+            db.session.query(User).filter(User.email == email).first().confirmed = True
+            db.session.commit()
+            return redirect(url_for("home"))
+
+    except BadSignature:
+        flash('The confirmation link is invalid or has expired. Try creating a new account.', 'danger')
 
 
 @app.route('/trackers', methods=["GET", "POST"])
@@ -154,7 +217,7 @@ def trackers():
 
 
 @app.route('/database', methods=["GET", "POST"])
-@login_required
+#@login_required
 def database():
     try:
         if request.method == "POST":

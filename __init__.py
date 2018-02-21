@@ -4,21 +4,24 @@ from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 from functools import wraps
 from itsdangerous import BadSignature
+import sys, os
+abspath = os.path.dirname(__file__)
+sys.path.append(abspath)
+os.chdir(abspath)
 from analytics import price_statistics, graph
 from database import *
 from scrapper import *
 from send_email import send_alert, send_confirmation
 from confirmation_tokens import generate_confirmation_token, confirm_token
-#import os
+from werkzeug.debug import DebuggedApplication
 
-#basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
-#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
 app.config['SECURITY_PASSWORD_SALT'] = "cant_guess_this"
 app.config['LOG_FILE'] = '/var/log/price_tracker/application.log'
-#app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 db = SQLAlchemy(app)
+application = DebuggedApplication(app, True)
 
 preview_content = None
 categories = ["Electronics", "Audio"]
@@ -95,49 +98,7 @@ def register():
     if request.method == "GET":
         return redirect(url_for("home"))
     elif request.method == "POST":
-        email = request.form["email"]
-        password = sha256_crypt.encrypt(request.form["password"])
-        # if account exists but not yet confirmed, recreate account and send confirmation email
-        if db.session.query(User).filter(User.email == email).count() != 0:
-            if not db.session.query(User).filter(User.email == email).first().confirmed:
-                # delete user
-                db.session.delete(db.session.query(User).filter(User.email == email).first())
-                db.session.commit()
-                # create user
-                if create_user(email, password):
-                    # generate token and confirm url
-                    token = generate_confirmation_token(email, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
-                    confirm_url = url_for("confirm_email", token=token, _external=True)
-                    # generate html template
-                    html_template = render_template("confirm_email_template.html", confirm_url=confirm_url)
-                    # send confirmation email
-                    send_confirmation(email, html_template)
-                    # print("recreating account")
-                    flash("Please check your email for confirmation.")
-                    return redirect(url_for("home"))
-                else:
-                    flash("Email is already in use, please try again.")
-                    return redirect(url_for("home"))
-        # create account if it does not exist
-        elif db.session.query(User).filter(User.email == email).count() == 0:
-            # create user
-            if create_user(email, password):
-                # generate token and confirm url
-                token = generate_confirmation_token(email, app.config["SECRET_KEY"], app.config["SECURITY_PASSWORD_SALT"])
-                confirm_url = url_for("confirm_email", token=token, _external=True)
-                # generate html template
-                html_template = render_template("confirm_email_template.html", confirm_url=confirm_url)
-                # send confirmation email
-                send_confirmation(email, html_template)
-                flash("Please check your email for confirmation.")
-                return redirect(url_for("home"))
-            else:
-                flash("Email is already in use, please try again.")
-                return redirect(url_for("home"))
-        else:
-            flash("Account is already created")
-            return redirect(url_for("home"))
-
+        return redirect(url_for("home"))
 
 @app.route('/logout', methods=["GET", "POST"])
 def logout():
@@ -297,6 +258,24 @@ def del_data():
     delete_data(int(request.form["delete"]))
     return redirect(url_for("database"))
 
+# to run on apache server
+
+# get all urls
+global urls
+global urls_to_crawl
+global categories
+urls = get_links()
+for c in categories:
+    if c in urls.keys():
+        urls_to_crawl.append(urls[c] + "?sort_by=time_created%2Cdescending")
+# start scheduler
+#app.config.from_object(Config())
+#scheduler = APScheduler()
+#scheduler.init_app(app)
+#scheduler.start()
+
+
+# to run on local host
 
 if __name__ == "__main__":
     app.debug = True

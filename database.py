@@ -3,8 +3,8 @@
 # from sqlalchemy.ext.declarative import declarative_base
 # from flask_sqlalchemy import SQLAlchemy
 
-from __init__ import db, categories
-from scrapper import scrap, filter_data, exception_words, price_range, search_data
+from __init__ import db
+from scrapper import search_data
 from analytics import price_statistics
 from send_email import send_alert
 
@@ -114,18 +114,6 @@ def delete_all_data():
     for i in db.session.query(Data).all():
         db.session.delete(i)
         db.session.commit()
-
-
-# saves crawled data in database
-def scrap_into_database(*urls):
-    print("Scrapping into database")
-    print(urls)
-    for category, url in zip(categories, urls):
-        print(category, url)
-        data = scrap(url)
-        data = filter_data(data, exception_words, exception_words, price_range)
-        for d in data:
-            create_data(d["name"], d["price"], d["date"], d["link"], category)
 
 
 def price_alert(listing):

@@ -2,25 +2,56 @@ import requests
 from bs4 import BeautifulSoup
 import difflib
 from datetime import date, timedelta
+import csv
 
 
 exception_words = ["spoilt", "broken", "1/10", "2/10", "3/10", "4/10"]
 price_range = (1, 9999)  # (min, max)
+categories = ["Property", "Electronics", "Jobs", "Mobiles & Tablets", "Women's Fashion",
+              "Men's Fashion", "Luxury", "Health & Beauty", "Video Gaming", "Toys & Games",
+              "Photography", "Sports", "Music & Media", "Antiques"]  # categories to scrap
+csv_file = "urls.csv"
 
 
-# returns links to all categories and subcategories on carousell
+# returns links to all categories and subcategories on Carousell
 def get_links():
-    print("Getting links!")
     urls = {}
     r = requests.get("https://carousell.com/")
     c = r.content
     soup = BeautifulSoup(c, "html.parser")
     nav_bar = soup.find("div", {"id": "navbarCategoryMenuButtonMenu-0"})
     links = nav_bar.find_all("a")
-    for l in links:
-        h = l.get('href')  # href link
-        t = l.get_text()  # category name
-        urls[t] = "https://carousell.com" + h
+    if "All" in categories:
+        # get all links
+        for l in links:
+            h = l.get('href')  # href link
+            t = l.get_text()  # category name
+            urls[t] = "https://carousell.com" + h + "?sort_by=time_created%2Cdescending"
+    else:
+        # get links specified in categories
+        for l in links:
+            h = l.get('href')  # href link
+            t = l.get_text()  # category name
+            if t in categories:
+                urls[t] = "https://carousell.com" + h + "?sort_by=time_created%2Cdescending"
+    return urls
+
+
+# save links into external file
+def save_links(urls, file):
+    with open(file, 'w', newline='') as csvfile:
+        urlwriter = csv.writer(csvfile, delimiter=' ')
+        for k,v in urls.items():
+            urlwriter.writerow([k, v])
+
+
+# gets urls from external file
+def load_links(file):
+    with open(file, newline="") as csvfile:
+        urlsreader = csv.reader(csvfile, delimiter=" ")
+        urls = {}
+        for row in urlsreader:
+            urls[row[0]] = row[1]
     return urls
 
 
@@ -156,12 +187,19 @@ def search_data(data, search_terms, tolerance=1):
 
     return search_results
 
+
+urls = get_links()
+save_links(urls, csv_file)
+
+
+# loaded = load_links(csv_file)
+# ls = list(loaded.keys())
+# ls.sort()
+# for i in ls:
+#     print(i)
 # get_links()
 # print(scrap("https://carousell.com/categories/electronics-7/audio-207/"))
 # print(filter_data(scrap("https://carousell.com/categories/electronics-7/audio-207/"), exception_words, exception_words, price_range))
 # generate_labels(data["sennheiser"])
 # print(search_database(["sennheiser", "headphones"], [data["sennheiser"]]))
 
-
-# df = pandas.DataFrame(data)
-# df.to_csv("output.csv")

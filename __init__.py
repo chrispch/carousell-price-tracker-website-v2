@@ -17,8 +17,8 @@ from confirmation_tokens import generate_confirmation_token, confirm_token
 
 
 app = Flask(__name__)
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hern3010@localhost/price-tracker-v2'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hern3010@localhost/price-tracker-v2'
 app.config['SECURITY_PASSWORD_SALT'] = "cant_guess_this"
 app.config['LOG_FILE'] = '/var/log/price_tracker/application.log'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'

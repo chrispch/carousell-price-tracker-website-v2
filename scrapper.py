@@ -33,7 +33,8 @@ def get_links():
             h = l.get('href')  # href link
             t = l.get_text()  # category name
             if t in categories:
-                urls[t] = "https://carousell.com" + h + "?sort_by=time_created%2Cdescending"
+           	 urls[t] = "https://carousell.com" + h + "?sort_by=time_created%2Cdescending"
+    print(urls)
     return urls
 
 

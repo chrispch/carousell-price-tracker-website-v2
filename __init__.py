@@ -301,11 +301,11 @@ def del_data():
 # to run on local host
 if __name__ == "__main__":
     app.debug = True
-    category = "Electronics"
-    data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
-    data = filter_data(data, exception_words, exception_words, price_range)
-    for d in data:
-        create_data(d["name"], d["price"], d["date"], d["link"], category)
+    # category = "Electronics"
+    # data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
+    # data = filter_data(data, exception_words, exception_words, price_range)
+    # for d in data:
+    #     create_data(d["name"], d["price"], d["date"], d["link"], category)
     app.run()
 
 else:

@@ -16,3 +16,7 @@ site works fine now
 added email functionality and confirm email function!
 -
 todo: test invalid confirmation, add price_alert email, prettify email templates
+-
+updated preview function to preview from database
+added price alert functionality
+fixed add_tracker bug

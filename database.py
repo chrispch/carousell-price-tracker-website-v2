@@ -3,10 +3,11 @@
 # from sqlalchemy.ext.declarative import declarative_base
 # from flask_sqlalchemy import SQLAlchemy
 
-from __init__ import db
+from __init__ import db, app
 from scrapper import search_data
 from analytics import price_statistics
 from send_email import send_alert
+from flask import render_template
 
 
 class User(db.Model):
@@ -130,13 +131,15 @@ def price_alert(listing):
             # if listing price triggers price alert
             if listing.price <= tracker.alert_price\
                     or listing.price <= ave_price * tracker.alert_percentage:
+                with app.app_context():
+                    html_template = render_template("price_alert_email_template.html", listing=listing, tracker=tracker)
+                to_email = str(tracker.user_email)
+                send_alert(to_email, html_template)
                 print("Data alert: ", listing.link)
                 print("Tracked by: ", tracker.user_email)
 
 
-
 db.create_all()
-
 
 
 # create_user(email="test1@mail.com", password="pw")

@@ -1,5 +1,4 @@
 from flask import Flask, request, session, redirect, url_for, render_template, flash
-#from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
 from passlib.hash import sha256_crypt
 from functools import wraps
@@ -12,7 +11,7 @@ os.chdir(abspath)
 from analytics import price_statistics, graph
 from database import *
 from scrapper import *
-from send_email import send_alert, send_confirmation
+from send_email import send_confirmation
 from confirmation_tokens import generate_confirmation_token, confirm_token
 
 
@@ -29,7 +28,6 @@ urls_file = "urls.csv"
 preview_content = None
 categories = list(load_links(urls_file).keys())
 categories.sort()
-# print(list(load_links(urls_file).keys()).sort())
 
 
 # Decorators
@@ -46,11 +44,11 @@ def login_required(func):
 
 def redirect_get(func):
     @wraps(func)
-    def decorated_function():
+    def decorated_function(*args, **kwargs):
         if request.method == "GET":
             return redirect(url_for("home"))
         else:
-            return func
+            return func(*args, **kwargs)
     return decorated_function
 
 
@@ -181,17 +179,21 @@ def trackers():
                 flash("Please enter either an alert price or percentage (or both)")
                 return redirect(url_for("trackers"))
 
-            # handle preview content (for add tab)
+            # handle preview content (for add tab) from database
             global preview_content
-            url = urls[current_category]
-            preview_content = scrap(url)
-            preview_content = filter_data(preview_content, exception_words, exception_words, price_range)
+            # url = urls[current_category]
+            # preview_content = scrap(url)
+            # preview_content = filter_data(preview_content, exception_words, exception_words, price_range)
+            preview_content = db.session.query(Data).filter(Data.category == current_category).all()
             # apply search terms
             if current_search != "":
                 preview_content = search_data(preview_content, current_search)
             # return price stats
             if preview_content:
                 price_stats = price_statistics(preview_content)
+            else:
+                price_stats = None
+
             return render_template("trackers.html", categories=categories,
                                    current_category=current_category,
                                    current_name=current_name, current_search=current_search,
@@ -299,6 +301,11 @@ def del_data():
 # to run on local host
 if __name__ == "__main__":
     app.debug = True
+    category = "Electronics"
+    data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
+    data = filter_data(data, exception_words, exception_words, price_range)
+    for d in data:
+        create_data(d["name"], d["price"], d["date"], d["link"], category)
     app.run()
 
 else:

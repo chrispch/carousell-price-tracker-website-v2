@@ -1,4 +1,5 @@
 from email.mime.text import MIMEText
+from datetime import datetime
 import smtplib
 
 from_email = "crispycrispycode@gmail.com"
@@ -16,6 +17,9 @@ def send_alert(to_email, html_template):
     gmail.starttls()
     gmail.login(from_email, password)
     gmail.send_message(msg)
+    # log time of price alert
+    with open("sent_alerts.txt", "a") as text_file:
+        text_file.write(to_email + " " + str(datetime.now()))
 
 
 def send_confirmation(to_email, html_template):

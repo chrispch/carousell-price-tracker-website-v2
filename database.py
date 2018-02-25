@@ -32,14 +32,18 @@ class Tracker(db.Model):
     search = db.Column(db.String)
     alert_price = db.Column(db.Float)
     alert_percentage = db.Column(db.Float)
+    ave_price = db.Column(db.Float)
+    tracked_items = db.Column(db.Integer)
 
-    def __init__(self, name, user_email, category, search, alert_price, alert_percentage):
+    def __init__(self, name, user_email, category, search, alert_price, alert_percentage, ave_price, tracked_items):
         self.name = name
         self.user_email = user_email
         self.category = category
         self.search = search
         self.alert_price = alert_price
         self.alert_percentage = alert_percentage
+        self.ave_price = ave_price
+        self.tracked_items = tracked_items
 
 
 class Data(db.Model):
@@ -70,8 +74,21 @@ def create_user(email, password):
 def create_tracker(name, user, category, search, alert_price, alert_percentage):
     # create and add tracker
     if db.session.query(Tracker).filter(Tracker.name == name).count() == 0:
+        # get average price of all current data entries corresponding to tracker
+        data = db.session.query(Data).filter(
+            Data.category == category).all()
+        results = search_data(data, search)
+        if results:
+            ave_price = price_statistics(results)["ave_price"]
+            # get number of data entries corresponding to tracker (to calculate future averages)
+            tracked_items = len(results)
+        else:
+            ave_price = 0
+            tracked_items = 0
+        # add tracker
         new_tracker = Tracker(name, user, category, search,
-                              alert_price, alert_percentage)
+                              alert_price, alert_percentage,
+                              ave_price, tracked_items)
         db.session.add(new_tracker)
         db.session.commit()
         return True
@@ -121,22 +138,22 @@ def price_alert(listing):
     # get trackers
     trackers = db.session.query(Tracker).all()
     for tracker in trackers:
-        data = db.session.query(Data).filter(
-            Data.category == tracker.category).all()
-        results = search_data(data, tracker.search)
-        if results:
-            ave_price = price_statistics(results)["ave_price"]
         # if listing is tracked by tracker
-        if listing in results:
+        tracked_words = set(tracker.search.lower().split(" "))
+        if bool(set(listing.name.lower().split(" ")).intersection(tracked_words)):
+            print("this is tracked:", listing.name)
             # if listing price triggers price alert
-            if listing.price <= tracker.alert_price\
-                    or listing.price <= ave_price * tracker.alert_percentage:
+            if listing.price <= tracker.alert_price or listing.price <= tracker.ave_price * tracker.alert_percentage:
+                # generate and send price alert email
                 with app.app_context():
                     html_template = render_template("price_alert_email_template.html", listing=listing, tracker=tracker)
                 to_email = str(tracker.user_email)
                 send_alert(to_email, html_template)
                 print("Data alert: ", listing.link)
-                print("Tracked by: ", tracker.user_email)
+                # update tracker ave_price and tracked items
+                tracker.tracked_items = int(tracker.tracked_items) + 1
+                tracker.ave_price = (tracker.ave_price + listing.price)/tracker.tracked_items
+                db.session.commit()
 
 
 db.create_all()

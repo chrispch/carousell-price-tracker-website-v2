@@ -20,3 +20,9 @@ todo: test invalid confirmation, add price_alert email, prettify email templates
 updated preview function to preview from database
 added price alert functionality
 fixed add_tracker bug
+-
+add average price stat to tracker database to reduce IO hit anytime price_statistics and price_alert is called
+turn off auto form submit in database tab
+add pages to data returned in database tab
+fix category option in database tab not persisting after searching for data
+replace for loops with set intersections (faster)

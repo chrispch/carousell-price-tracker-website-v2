@@ -16,8 +16,8 @@ from confirmation_tokens import generate_confirmation_token, confirm_token
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hern3010@localhost/price-tracker-v2'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://price-tracker-v2:pricetracker@localhost/price-tracker-v2'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:hern3010@localhost/price-tracker-v2'
 app.config['SECURITY_PASSWORD_SALT'] = "cant_guess_this"
 app.config['LOG_FILE'] = '/var/log/price_tracker/application.log'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
@@ -239,7 +239,8 @@ def database():
             # if no data to return
             else:
                 return render_template("database.html", database_nav="nav-link active", trackers_nav="nav-link",
-                                       current_search=current_search, data=None, price_stats=None, categories=categories)
+                                       current_search=current_search, data=None, price_stats=None,
+                                       categories=categories, current_category=current_category)
         elif request.method == "GET":
             return render_template("database.html", database_nav="nav-link active", trackers_nav="nav-link",
                                    categories=categories, data=None, price_stats=None)
@@ -301,11 +302,11 @@ def del_data():
 # to run on local host
 if __name__ == "__main__":
     app.debug = True
-    # category = "Electronics"
-    # data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
-    # data = filter_data(data, exception_words, exception_words, price_range)
-    # for d in data:
-    #     create_data(d["name"], d["price"], d["date"], d["link"], category)
+    category = "Electronics"
+    data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
+    data = filter_data(data, exception_words, exception_words, price_range)
+    for d in data:
+        create_data(d["name"], d["price"], d["date"], d["link"], category)
     app.run()
 
 else:

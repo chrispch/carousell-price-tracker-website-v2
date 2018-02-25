@@ -9,7 +9,7 @@
 		<!-- Search Term -->
 		<div class="form-group">
 			<label for="search-term">Search</label>
-			<input name="search" type="text" class="form-control" id="search-term" placeholder="Search database" value="{{current_search}}" onblur="this.form.submit()">
+			<input name="search" type="text" class="form-control" id="search-term" placeholder="Search database" value="{{current_search}}">
 		</div>
 
 		<!-- Tolerance Value -->
@@ -17,7 +17,7 @@
 		<!-- Category -->
 		<div class="form-group"
 		<label for="category">Category</label>
-			<select name="category" class="form-control" id="category" onchange="this.form.submit()">
+			<select name="category" class="form-control" id="category">
 				{% for i in categories %}
 					{% if i == current_category %}
 						<option selected>{{i}}</option>

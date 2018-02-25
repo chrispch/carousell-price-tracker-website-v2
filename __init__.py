@@ -188,9 +188,11 @@ def trackers():
             # apply search terms
             if current_search != "":
                 preview_content = search_data(preview_content, current_search)
-            # return price stats
             if preview_content:
+                # return price stats
                 price_stats = price_statistics(preview_content)
+                # display only the first 50 items
+                preview_content = preview_content[:50]
             else:
                 price_stats = None
 
@@ -232,6 +234,8 @@ def database():
             if data:
                 price_stats = price_statistics(data)
                 graph(data)
+                # display on the most recent 100 listings
+                data = data[:100]
 
                 return render_template("database.html", database_nav="nav-link active", trackers_nav="nav-link",
                                        current_search=current_search, data=data, current_category=current_category,
@@ -302,11 +306,11 @@ def del_data():
 # to run on local host
 if __name__ == "__main__":
     app.debug = True
-    category = "Electronics"
-    data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
-    data = filter_data(data, exception_words, exception_words, price_range)
-    for d in data:
-        create_data(d["name"], d["price"], d["date"], d["link"], category)
+    # category = "Electronics"
+    # data = scrap("https://carousell.com/categories/electronics-7/?sort_by=time_created%2Cdescending&collection_id=7&cc_id=361")
+    # data = filter_data(data, exception_words, exception_words, price_range)
+    # for d in data:
+    #     create_data(d["name"], d["price"], d["date"], d["link"], category)
     app.run()
 
 else:

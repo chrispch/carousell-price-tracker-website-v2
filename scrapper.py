@@ -155,51 +155,9 @@ def search_data(data, search_terms, tolerance=1):
             name_words = set(d["name"].lower().split(" "))
         else:
             name_words = set(d.name.lower().split(" "))
-        # if the name of listing matches search term, add listing to search results
-        if bool(name_words.intersection(search_terms)):
+        # if the name of listing matches all search term, add listing to search results
+        if name_words.intersection(search_terms) == search_terms:
             search_results.append(d)
-
-    # for f in search_terms:
-    #     # runs for the first filter
-    #     if not search_results:
-    #         for listing in data:
-    #             if type(listing) is dict:
-    #                 # checks to see if label matches any word in name, to given tolerance, and returns results
-    #                 for word in listing["name"].split(" "):
-    #                     s = difflib.SequenceMatcher(None, f.lower(), word.lower())
-    #                     if s.quick_ratio() >= tolerance or f.lower() in word.lower():
-    #                         print(f.lower())
-    #                         print(word.lower())
-    #                         if listing not in search_results:
-    #                             search_results.append(listing)
-    #             else:
-    #                 # checks to see if label matches any word in name, to given tolerance, and returns results
-    #                 for word in listing.name.split(" "):
-    #                     s = difflib.SequenceMatcher(None, f.lower(), word.lower())
-    #                     if s.quick_ratio() >= tolerance or f.lower() in word.lower():
-    #                         if listing not in search_results:
-    #                             search_results.append(listing)
-    #
-    #     # subsequent filtered results stored in temp_results for comparison
-    #     else:
-    #         for listing in data:
-    #             # checks to see if label matches any word in name, to given tolerance, and returns results
-    #             if type(listing) is dict:
-    #                 for word in listing["name"].split(" "):
-    #                     s = difflib.SequenceMatcher(None, f.lower(), word.lower())
-    #                     if s.quick_ratio() >= tolerance or f.lower() in word.lower():
-    #                         if listing not in temp_results:
-    #                             temp_results.append(listing)
-    #             else:
-    #                 for word in listing.name.split(" "):
-    #                     s = difflib.SequenceMatcher(None, f.lower(), word.lower())
-    #                     if s.quick_ratio() >= tolerance or f.lower() in word.lower():
-    #                         if listing not in temp_results:
-    #                             temp_results.append(listing)
-    #         # intersects all new search results and saves it in search_results
-    #         search_results = list(
-    #             filter(lambda x: x in search_results, temp_results))
-    #         temp_results = []
 
     return search_results
 

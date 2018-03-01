@@ -102,8 +102,9 @@ def create_data(name, price, date, link, category):
     # if listing of same name, price and date not already in database, add data to database
     if query_data.count() == 0:
         db.session.add(new_data)
-        price_alert(new_data)
         db.session.commit()
+        price_alert(new_data)
+        
     # if same listing has multiple categories, add new category to data
     elif category not in query_data.first().category.split(", "):
         print("multiple categories!")
@@ -140,7 +141,7 @@ def price_alert(listing):
     for tracker in trackers:
         # if listing is tracked by tracker
         tracked_words = set(tracker.search.lower().split(" "))
-        if bool(set(listing.name.lower().split(" ")).intersection(tracked_words)):
+        if set(listing.name.lower().split(" ")).intersection(tracked_words) == tracked_words:
             print("this is tracked:", listing.name)
             # if listing price triggers price alert
             if listing.price <= tracker.alert_price or listing.price <= tracker.ave_price * tracker.alert_percentage:

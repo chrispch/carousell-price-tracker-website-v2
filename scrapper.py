@@ -163,7 +163,7 @@ def search_data(data, search_terms, tolerance=1):
 
 
 urls = get_links()
-save_links(urls, csv_file)
+#save_links(urls, csv_file)
 
 
 # loaded = load_links(csv_file)
